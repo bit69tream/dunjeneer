@@ -13,6 +13,10 @@
 #define LEAFS_MAX 64
 #define MIN_LEAF_SIZE 8
 
+#define ROOMS_MAX LEAFS_MAX
+
+typedef Rectangle Room;
+
 typedef struct {
   Rectangle rect;
   size_t left_leaf;
@@ -224,8 +228,40 @@ int main(void) {
     }
   }
 
-  generate_leafs_until_unable_to(leafs, &leafs_len, 0);
-  generate_leafs_until_unable_to(leafs, &leafs_len, 1);
+  assert(leafs_len == 2);
+  while (true) {
+    generate_leafs_until_unable_to(leafs, &leafs_len, 0);
+    generate_leafs_until_unable_to(leafs, &leafs_len, 1);
+
+    size_t rooms_counter = 0;
+    for (size_t i = 0; i < leafs_len; i++) {
+      if (leafs[i].left_leaf == 0 || leafs[i].right_leaf == 0) {
+        rooms_counter ++;
+      }
+    }
+
+    if (rooms_counter < 6) {
+      leafs_len = 2;
+      continue;
+    }
+
+    break;
+  }
+
+  Room rooms[ROOMS_MAX] = {0};
+  size_t rooms_len = 0;
+
+  for (size_t i = 0; i < leafs_len; i++) {
+    if (leafs[i].left_leaf != 0 && leafs[i].right_leaf != 0) continue;
+
+    size_t new_room = 0;
+    PUSH(rooms, &rooms_len, ROOMS_MAX, &new_room);
+
+    rooms[new_room].width = (float)((int)((frand_range(0.6f, 0.9f) * leafs[i].rect.width)));
+    rooms[new_room].height = (float)((int)((frand_range(0.6f, 0.9f) * leafs[i].rect.height)));
+    rooms[new_room].x = leafs[i].rect.x + (float)(rand_range(0, (int)(leafs[i].rect.width - rooms[new_room].width)));
+    rooms[new_room].y = leafs[i].rect.y + (float)(rand_range(0, (int)(leafs[i].rect.height - rooms[new_room].height)));
+  }
 
   printf("%lu\n", leafs_len);
 
@@ -250,11 +286,20 @@ int main(void) {
                     (int)(leafs[i].rect.width * CELL_SIZE),
                     (int)(leafs[i].rect.height * CELL_SIZE),
                     (CLITERAL(Color){
-                      (unsigned char)rand_range(128, 255),
-                      (unsigned char)rand_range(128, 255),
-                      (unsigned char)rand_range(128, 255),
-                      (unsigned char)rand_range(128, 255),
+                      (unsigned char)rand_range(100, 255),
+                      (unsigned char)rand_range(100, 255),
+                      (unsigned char)rand_range(100, 255),
+                      (unsigned char)rand_range(100, 255),
                     }));
+    }
+
+    for (size_t i = 0; i < rooms_len; i++) {
+      DrawRectangle((int)(rooms[i].x * CELL_SIZE),
+                    (int)(rooms[i].y * CELL_SIZE),
+                    (int)(rooms[i].width * CELL_SIZE),
+                    (int)(rooms[i].height * CELL_SIZE),
+                    BLACK);
+
     }
   } EndTextureMode();
 
