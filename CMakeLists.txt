@@ -24,7 +24,9 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
 endif()
 
 add_executable(${PROJECT_NAME}
-  main.c)
+  source/game.c
+  source/dungeon_generation.c
+  source/rand.c)
 set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 

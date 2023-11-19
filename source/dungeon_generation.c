@@ -1,58 +1,7 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <time.h>
-
-#include <raylib.h>
-
-#define LEVEL_WIDTH 90
-#define LEVEL_HEIGHT 60
-
-#define LEAFS_MAX 64
-#define MIN_LEAF_SIZE 8
-
-#define ROOMS_MAX LEAFS_MAX
-
-typedef Rectangle Room;
-
-typedef struct {
-  Rectangle rect;
-  size_t left_leaf;
-  size_t right_leaf;
-  size_t parent;
-} Leaf;
-
-bool roll_dice(int n) {
-  return (rand() % n) == 0;
-}
-
-int rand_range(int a, int b) {
-  assert(a < b && "a must be less than b");
-
-  int n = b - a;
-  return (rand() % (n + 1)) - abs(a);
-}
-
-float frand_range(float a, float b) {
-  assert(a < b && "a must be less than b");
-  assert((a < 1.0 && b <= 1.0) &&
-         (a >= 0.0 && b > 0.0) &&
-         "a must be in range [0, 1), b must be in range (0, 1]");
-
-  int bb = (int)(b * 100.0f);
-  int aa = (int)(a * 100.0f);
-  int n = (int)(bb - aa);
-  return (float)((rand() % (n + 1)) + aa) / 100.0f;
-}
-
-#define PUSH(arr, len, cap, dest_index)         \
-  do {                                          \
-    assert((*(len)) < (cap));                   \
-                                                \
-    *(dest_index) = (*(len))++;                 \
-  } while (0)
+#include "dungeon_generation.h"
+#include "rand.h"
+#include "utils.h"
+#include "game.h"
 
 bool generate_leafs(Leaf *leafs, size_t *leafs_len, size_t leaf_index) {
   float where_to_split = frand_range(0.4f, 0.6f);
@@ -156,11 +105,10 @@ bool generate_leafs_until_unable_to(Leaf *leafs, size_t *leafs_len, size_t leaf_
   return true;
 }
 
-int main(void) {
+
+void generate_rooms(Room rooms[ROOMS_MAX], size_t *rooms_len) {
   Leaf leafs[LEAFS_MAX] = {0};
   size_t leafs_len = 0;
-
-  srand((unsigned int)time(0));
 
   float where_to_split = frand_range(0.4f, 0.6f);
 
@@ -248,73 +196,15 @@ int main(void) {
     break;
   }
 
-  Room rooms[ROOMS_MAX] = {0};
-  size_t rooms_len = 0;
-
   for (size_t i = 0; i < leafs_len; i++) {
     if (leafs[i].left_leaf != 0 && leafs[i].right_leaf != 0) continue;
 
     size_t new_room = 0;
-    PUSH(rooms, &rooms_len, ROOMS_MAX, &new_room);
+    PUSH(rooms, rooms_len, ROOMS_MAX, &new_room);
 
     rooms[new_room].width = (float)((int)((frand_range(0.6f, 0.9f) * (leafs[i].rect.width))));
     rooms[new_room].height = (float)((int)((frand_range(0.6f, 0.9f) * (leafs[i].rect.height))));
     rooms[new_room].x = leafs[i].rect.x + (float)(rand_range(0, (int)(leafs[i].rect.width - rooms[new_room].width)));
     rooms[new_room].y = leafs[i].rect.y + (float)(rand_range(0, (int)(leafs[i].rect.height - rooms[new_room].height)));
   }
-
-  printf("%lu\n", leafs_len);
-
-  #define CELL_SIZE 16
-
-  /* SetConfigFlags(FLAG_WINDOW_RESIZABLE); */
-  InitWindow((LEVEL_WIDTH + 2) * CELL_SIZE, (LEVEL_HEIGHT + 2) * CELL_SIZE, "dunjeneer");
-  SetExitKey(KEY_NULL);
-
-  SetTargetFPS(60);
-
-  RenderTexture2D level = LoadRenderTexture(LEVEL_WIDTH * CELL_SIZE, LEVEL_HEIGHT * CELL_SIZE);
-
-  BeginTextureMode(level); {
-    ClearBackground(BLACK);
-
-    /* for (size_t i = 0; i < leafs_len; i++) { */
-    /*   if (leafs[i].left_leaf != 0 && leafs[i].right_leaf != 0) continue; */
-
-    /*   DrawRectangle((int)(leafs[i].rect.x * CELL_SIZE), */
-    /*                 (int)(leafs[i].rect.y * CELL_SIZE), */
-    /*                 (int)(leafs[i].rect.width * CELL_SIZE), */
-    /*                 (int)(leafs[i].rect.height * CELL_SIZE), */
-    /*                 (CLITERAL(Color){ */
-    /*                   (unsigned char)rand_range(100, 255), */
-    /*                   (unsigned char)rand_range(100, 255), */
-    /*                   (unsigned char)rand_range(100, 255), */
-    /*                   (unsigned char)rand_range(100, 255), */
-    /*                 })); */
-    /* } */
-
-    for (size_t i = 0; i < rooms_len; i++) {
-      DrawRectangle((int)(rooms[i].x * CELL_SIZE),
-                    (int)(rooms[i].y * CELL_SIZE),
-                    (int)(rooms[i].width * CELL_SIZE),
-                    (int)(rooms[i].height * CELL_SIZE),
-                    WHITE);
-    }
-  } EndTextureMode();
-
-  while (!WindowShouldClose())
-    {
-      BeginDrawing();
-
-      ClearBackground(BLACK);
-
-      DrawTexture(level.texture, CELL_SIZE, CELL_SIZE, WHITE);
-
-      EndDrawing();
-    }
-
-  CloseWindow();
-
-
-  return 0;
 }
