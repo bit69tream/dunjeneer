@@ -257,8 +257,8 @@ int main(void) {
     size_t new_room = 0;
     PUSH(rooms, &rooms_len, ROOMS_MAX, &new_room);
 
-    rooms[new_room].width = (float)((int)((frand_range(0.6f, 0.9f) * leafs[i].rect.width)));
-    rooms[new_room].height = (float)((int)((frand_range(0.6f, 0.9f) * leafs[i].rect.height)));
+    rooms[new_room].width = (float)((int)((frand_range(0.6f, 0.9f) * (leafs[i].rect.width))));
+    rooms[new_room].height = (float)((int)((frand_range(0.6f, 0.9f) * (leafs[i].rect.height))));
     rooms[new_room].x = leafs[i].rect.x + (float)(rand_range(0, (int)(leafs[i].rect.width - rooms[new_room].width)));
     rooms[new_room].y = leafs[i].rect.y + (float)(rand_range(0, (int)(leafs[i].rect.height - rooms[new_room].height)));
   }
@@ -268,7 +268,7 @@ int main(void) {
   #define CELL_SIZE 16
 
   /* SetConfigFlags(FLAG_WINDOW_RESIZABLE); */
-  InitWindow(LEVEL_WIDTH * CELL_SIZE, LEVEL_HEIGHT * CELL_SIZE, "dunjeneer");
+  InitWindow((LEVEL_WIDTH + 2) * CELL_SIZE, (LEVEL_HEIGHT + 2) * CELL_SIZE, "dunjeneer");
   SetExitKey(KEY_NULL);
 
   SetTargetFPS(60);
@@ -278,28 +278,27 @@ int main(void) {
   BeginTextureMode(level); {
     ClearBackground(BLACK);
 
-    for (size_t i = 0; i < leafs_len; i++) {
-      /* if (leafs[i].left_leaf != 0 && leafs[i].right_leaf != 0) continue; */
+    /* for (size_t i = 0; i < leafs_len; i++) { */
+    /*   if (leafs[i].left_leaf != 0 && leafs[i].right_leaf != 0) continue; */
 
-      DrawRectangle((int)(leafs[i].rect.x * CELL_SIZE),
-                    (int)(leafs[i].rect.y * CELL_SIZE),
-                    (int)(leafs[i].rect.width * CELL_SIZE),
-                    (int)(leafs[i].rect.height * CELL_SIZE),
-                    (CLITERAL(Color){
-                      (unsigned char)rand_range(100, 255),
-                      (unsigned char)rand_range(100, 255),
-                      (unsigned char)rand_range(100, 255),
-                      (unsigned char)rand_range(100, 255),
-                    }));
-    }
+    /*   DrawRectangle((int)(leafs[i].rect.x * CELL_SIZE), */
+    /*                 (int)(leafs[i].rect.y * CELL_SIZE), */
+    /*                 (int)(leafs[i].rect.width * CELL_SIZE), */
+    /*                 (int)(leafs[i].rect.height * CELL_SIZE), */
+    /*                 (CLITERAL(Color){ */
+    /*                   (unsigned char)rand_range(100, 255), */
+    /*                   (unsigned char)rand_range(100, 255), */
+    /*                   (unsigned char)rand_range(100, 255), */
+    /*                   (unsigned char)rand_range(100, 255), */
+    /*                 })); */
+    /* } */
 
     for (size_t i = 0; i < rooms_len; i++) {
       DrawRectangle((int)(rooms[i].x * CELL_SIZE),
                     (int)(rooms[i].y * CELL_SIZE),
                     (int)(rooms[i].width * CELL_SIZE),
                     (int)(rooms[i].height * CELL_SIZE),
-                    BLACK);
-
+                    WHITE);
     }
   } EndTextureMode();
 
@@ -309,7 +308,7 @@ int main(void) {
 
       ClearBackground(BLACK);
 
-      DrawTexture(level.texture, 0, 0, WHITE);
+      DrawTexture(level.texture, CELL_SIZE, CELL_SIZE, WHITE);
 
       EndDrawing();
     }
