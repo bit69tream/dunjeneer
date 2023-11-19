@@ -5,10 +5,14 @@ bool roll_dice(int n) {
 }
 
 int rand_range(int a, int b) {
-  assert(a < b && "a must be less than b");
+  assert(a <= b && "a must be less or equal to b");
 
-  int n = b - a;
-  return (rand() % (n + 1)) - abs(a);
+  if (a == b) {
+    return a;
+  } else {
+    int n = b - a;
+    return (rand() % (n + 1)) - abs(a);
+  }
 }
 
 float frand_range(float a, float b) {

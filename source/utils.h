@@ -6,3 +6,5 @@
                                                 \
     *(dest_index) = (*(len))++;                 \
   } while (0)
+
+#define SIZE_OF(arr) ((sizeof(arr) / sizeof(arr[0])))

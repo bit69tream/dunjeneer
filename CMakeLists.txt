@@ -25,8 +25,9 @@ endif()
 
 add_executable(${PROJECT_NAME}
   source/game.c
-  source/dungeon_generation.c
-  source/rand.c)
+  source/level_generator.c
+  source/rand.c
+  source/font.c)
 set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 
