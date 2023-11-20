@@ -4,6 +4,9 @@ project(dunjeneer)
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(CMAKE_C_STANDARD 23)
+set(C_STANDARD_REQUIRED ON)
+
 # Dependencies
 set(RAYLIB_VERSION 5.0)
 find_package(raylib ${RAYLIB_VERSION} QUIET) # QUIET or REQUIRED
@@ -35,13 +38,13 @@ if(CMAKE_BUILD_TYPE STREQUAL Release)
   target_compile_definitions(${PROJECT_NAME} PRIVATE NO_RAYLIB_INFO)
   target_compile_options(${PROJECT_NAME} PRIVATE -O2)
 else()
-  target_compile_options(${PROJECT_NAME} PRIVATE -Og -ggdb)
+  target_compile_options(${PROJECT_NAME} PRIVATE -O0 -ggdb)
 endif()
 
 if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
 else()
-  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror -Wconversion)
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror -Wconversion -ggdb)
 endif()
 
 # Checks if OSX and links appropriate frameworks (Only required on MacOS)
