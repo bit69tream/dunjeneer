@@ -25,7 +25,7 @@ typedef struct {
   Point middle;
   Point end;
 
-  bool vertical;
+  bool vertical_first;
 } Path;
 
 typedef enum {
