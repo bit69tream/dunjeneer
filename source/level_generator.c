@@ -221,35 +221,20 @@ void generate_rooms(Room rooms[ROOMS_MAX], size_t *rooms_len) {
 
 void generate_paths_between_rooms(Room rooms[ROOMS_MAX], size_t rooms_len,
                                   Path paths[PATHS_MAX], size_t *paths_len) {
-  size_t room_ids[ROOMS_MAX] = {0};
-  size_t room_ids_len = rooms_len;
-
-  for (size_t i = 0; i < rooms_len; i++) {
-    room_ids[i] = i;
-  }
-
   /* TODO: improve path generator */
   /* it would be better if paths were generated from continuously */
   /* like, from room 0 to room 1, then from room 1 to room 2, etc */
   /* it should also connect last rooms with first ones, or generate a few random paths */
 
-  while (room_ids_len > 1) {
-    size_t ai = (size_t)rand_range(0, (int)(room_ids_len - 1));
-    size_t id_a = room_ids[ai];
-    room_ids[ai] = room_ids[--room_ids_len];
-
-    size_t bi = (size_t)rand_range(0, (int)(room_ids_len - 1));
-    size_t id_b = room_ids[bi];
-    room_ids[bi] = room_ids[--room_ids_len];
-
-    Point center_a = {
-      .x = floorf(rooms[id_a].x + (rooms[id_a].width / 2)),
-      .y = floorf(rooms[id_a].y + (rooms[id_a].height / 2)),
+  for (size_t i = 1; i < rooms_len; i++) {
+    Point point_a = {
+      .x = (int)(rooms[i - 1].x + (rooms[i - 1].width / 2)),
+      .y = (int)(rooms[i - 1].y + (rooms[i - 1].height / 2)),
     };
 
-    Point center_b = {
-      .x = floorf(rooms[id_b].x + (rooms[id_b].width / 2)),
-      .y = floorf(rooms[id_b].y + (rooms[id_b].height / 2)),
+    Point point_b = {
+      .x = (int)(rooms[i].x + (rooms[i].width / 2)),
+      .y = (int)(rooms[i].y + (rooms[i].height / 2)),
     };
 
     size_t new_path = 0;
@@ -257,23 +242,23 @@ void generate_paths_between_rooms(Room rooms[ROOMS_MAX], size_t rooms_len,
     if (roll_dice(2)) {
       /* vertical - horizontal */
       paths[new_path] = (Path) {
-        .start = center_a,
+        .start = point_a,
         .middle = (Point) {
-          .x = center_a.x,
-          .y = center_b.y
+          .x = point_a.x,
+          .y = point_b.y
         },
-        .end = center_b,
+        .end = point_b,
         .vertical = true,
       };
     } else {
       /* horizontal - vertical */
       paths[new_path] = (Path) {
-        .start = center_a,
+        .start = point_a,
         .middle = (Point) {
-          .x = center_b.x,
-          .y = center_a.y
+          .x = point_b.x,
+          .y = point_a.y
         },
-        .end = center_b,
+        .end = point_b,
         .vertical = false,
       };
     }

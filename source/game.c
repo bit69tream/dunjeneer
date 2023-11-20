@@ -18,7 +18,7 @@ int main(void) {
   static LevelMap map = {0};
   generate_level(&map);
 
-  #define SCALING_FACTOR 2
+  #define SCALING_FACTOR 1
 
   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
   /* TODO: adapt ui to the window size, tell user that window is too small when it is */
@@ -51,7 +51,7 @@ int main(void) {
                        glyphs[tile_to_glyph(tile)],
                        (Rectangle) {
                          .x = (float)(x * GLYPH_WIDTH * SCALING_FACTOR) + (float)((GLYPH_GAP * x) + GLYPH_GAP),
-                         .y = (float)(y * GLYPH_HEIGHT * SCALING_FACTOR) +  + (float)((GLYPH_GAP * y) + GLYPH_GAP),
+                         .y = (float)(y * GLYPH_HEIGHT * SCALING_FACTOR) + (float)((GLYPH_GAP * y) + GLYPH_GAP),
                          .width = GLYPH_WIDTH * SCALING_FACTOR,
                          .height = GLYPH_HEIGHT * SCALING_FACTOR,
                        },

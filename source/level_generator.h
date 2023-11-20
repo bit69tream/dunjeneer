@@ -6,7 +6,12 @@
 
 typedef Rectangle Room;
 
-typedef Vector2 Point;
+typedef struct {
+  int x;
+  int y;
+} Vector2I;
+
+typedef Vector2I Point;
 
 typedef struct {
   Rectangle rect;
@@ -35,8 +40,8 @@ typedef enum {
 
 typedef LevelTile LevelMap[LEVEL_HEIGHT][LEVEL_WIDTH];
 
-#define LEAFS_MAX 64
-#define MIN_LEAF_SIZE 10
+#define LEAFS_MAX 128
+#define MIN_LEAF_SIZE 20
 
 #define ROOMS_MAX LEAFS_MAX
 #define PATHS_MAX LEAFS_MAX
