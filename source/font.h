@@ -10,6 +10,13 @@
 #define GLYPH_HEIGHT 7
 #define GLYPH_GAP 1
 
+typedef enum {
+  SPECIAL_GLYPH_NONE,
+  SPECIAL_GLYPH_RECTANGLE,
+  SPECIAL_GLYPH_CENTERED_DOT,
+  SPECIAL_GLYPHS_COUNT,
+} SpecialGlyph;
+
 extern Rectangle glyphs[128];
 
 Texture2D font_texture(void);
