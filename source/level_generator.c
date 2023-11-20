@@ -4,6 +4,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 bool generate_leafs(Leaf *leafs, size_t *leafs_len, size_t leaf_index) {
   float where_to_split = frand_range(0.4f, 0.6f);
@@ -221,20 +222,15 @@ void generate_rooms(Room rooms[ROOMS_MAX], size_t *rooms_len) {
 
 void generate_paths_between_rooms(Room rooms[ROOMS_MAX], size_t rooms_len,
                                   Path paths[PATHS_MAX], size_t *paths_len) {
-  /* TODO: improve path generator */
-  /* it would be better if paths were generated from continuously */
-  /* like, from room 0 to room 1, then from room 1 to room 2, etc */
-  /* it should also connect last rooms with first ones, or generate a few random paths */
-
   for (size_t i = 1; i < rooms_len; i++) {
     Point point_a = {
-      .x = (int)(rooms[i - 1].x + (rooms[i - 1].width / 2)),
-      .y = (int)(rooms[i - 1].y + (rooms[i - 1].height / 2)),
+      .x = (size_t)((rooms[i - 1].x + 1) + (drand48() * (rooms[i - 1].width - 2))),
+      .y = (size_t)((rooms[i - 1].y + 1) + (drand48() * (rooms[i - 1].height - 2))),
     };
 
     Point point_b = {
-      .x = (int)(rooms[i].x + (rooms[i].width / 2)),
-      .y = (int)(rooms[i].y + (rooms[i].height / 2)),
+      .x = (size_t)((rooms[i].x + 1) + (drand48() * (rooms[i].width - 2))),
+      .y = (size_t)((rooms[i].y + 1) + (drand48() * (rooms[i].height - 2))),
     };
 
     size_t new_path = 0;
@@ -265,7 +261,7 @@ void generate_paths_between_rooms(Room rooms[ROOMS_MAX], size_t rooms_len,
   }
 }
 
-void put_horizontal_line(LevelMap *output_map, size_t x_start, size_t x_end, size_t y) {
+void put_horizontal_path(LevelMap *output_map, size_t x_start, size_t x_end, size_t y) {
   if (x_end < x_start) {
     size_t tmp = x_end;
     x_end = x_start;
@@ -276,7 +272,7 @@ void put_horizontal_line(LevelMap *output_map, size_t x_start, size_t x_end, siz
     printf("bruuuh\n");
   }
 
-  for (size_t xi = x_start; xi < x_end; xi++) {
+  for (size_t xi = x_start; xi <= x_end; xi++) {
     if ((*output_map)[y][xi] == TILE_WALL) {
       (*output_map)[y][xi] = TILE_DOOR;
     } else {
@@ -285,7 +281,7 @@ void put_horizontal_line(LevelMap *output_map, size_t x_start, size_t x_end, siz
   }
 }
 
-void put_vertical_line(LevelMap *output_map, size_t y_start, size_t y_end, size_t x) {
+void put_vertical_path(LevelMap *output_map, size_t y_start, size_t y_end, size_t x) {
   if (y_end < y_start) {
     size_t tmp = y_end;
     y_end = y_start;
@@ -296,7 +292,7 @@ void put_vertical_line(LevelMap *output_map, size_t y_start, size_t y_end, size_
     printf("aaah\n");
   }
 
-  for (size_t yi = y_start; yi < y_end; yi++) {
+  for (size_t yi = y_start; yi <= y_end; yi++) {
     if ((*output_map)[yi][x] == TILE_WALL) {
       (*output_map)[yi][x] = TILE_DOOR;
     } else {
@@ -356,23 +352,23 @@ void put_everything_on_a_map(LevelMap *output_map,
   for (size_t i = 0; i < paths_len; i++) {
     if (paths[i].vertical) {
       /* vertical horizontal */
-      put_vertical_line(output_map,
+      put_vertical_path(output_map,
                         (size_t)paths[i].start.y,
                         (size_t)paths[i].middle.y,
                         (size_t)paths[i].start.x);
 
-      put_horizontal_line(output_map,
+      put_horizontal_path(output_map,
                           (size_t)paths[i].middle.x,
                           (size_t)paths[i].end.x,
                           (size_t)paths[i].middle.y);
     } else {
       /* horizontal vertical */
-      put_horizontal_line(output_map,
+      put_horizontal_path(output_map,
                           (size_t)paths[i].start.x,
                           (size_t)paths[i].middle.x,
                           (size_t)paths[i].start.y);
 
-      put_vertical_line(output_map,
+      put_vertical_path(output_map,
                         (size_t)paths[i].middle.y,
                         (size_t)paths[i].end.y,
                         (size_t)paths[i].middle.x);

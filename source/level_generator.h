@@ -7,8 +7,8 @@
 typedef Rectangle Room;
 
 typedef struct {
-  int x;
-  int y;
+  size_t x;
+  size_t y;
 } Vector2I;
 
 typedef Vector2I Point;
