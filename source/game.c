@@ -84,12 +84,15 @@ int main(void) {
 
   /* ExportImage(LoadImageFromTexture(t.texture), "level.png"); */
 
-#define TO_SCREEN(x, type) ((type)((x) * GLYPH_WIDTH * SCALING_FACTOR) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
+#define X_TO_SCREEN(x, type) ((type)((x) * GLYPH_WIDTH * SCALING_FACTOR) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
+#define Y_TO_SCREEN(x, type) ((type)((x) * GLYPH_HEIGHT * SCALING_FACTOR) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
 
   Camera2D camera = {0};
 
   camera.rotation = 0;
-  camera.zoom = 5;
+  camera.zoom = 4;
+
+  (void) camera;
 
   /* TODO: make player movements a little slower, but still crisp and responsive */
 
@@ -111,11 +114,11 @@ int main(void) {
       player_location.x += 1;
     }
 
-    player_location.x = CLAMP(0, LEVEL_WIDTH, player_location.x);
-    player_location.y = CLAMP(0, LEVEL_HEIGHT, player_location.y);
+    player_location.x = CLAMP(1, LEVEL_WIDTH, player_location.x);
+    player_location.y = CLAMP(1, LEVEL_HEIGHT, player_location.y);
 
-    camera.target.x = TO_SCREEN(player_location.x, float) + (GLYPH_WIDTH / 2.0f);
-    camera.target.y = TO_SCREEN(player_location.y, float) + (GLYPH_HEIGHT / 2.0f);
+    camera.target.x = X_TO_SCREEN(player_location.x, float) + (GLYPH_WIDTH / 2.0f);
+    camera.target.y = Y_TO_SCREEN(player_location.y, float) + (GLYPH_HEIGHT / 2.0f);
 
     camera.offset.x = (float)GetScreenWidth() / 2.0f;
     camera.offset.y = (float)GetScreenHeight() / 2.0f;
@@ -133,8 +136,8 @@ int main(void) {
         DrawTexturePro(font,
                        glyphs[tile_to_glyph(tile)],
                        (Rectangle) {
-                         .x = TO_SCREEN(x, float),
-                         .y = TO_SCREEN(y, float),
+                         .x = X_TO_SCREEN(x, float),
+                         .y = Y_TO_SCREEN(y, float),
                          .width = GLYPH_WIDTH * SCALING_FACTOR,
                          .height = GLYPH_HEIGHT * SCALING_FACTOR,
                        },
@@ -145,8 +148,8 @@ int main(void) {
     }
 
     for (size_t i = 0; i < objects_len; i++) {
-      DrawRectangle(TO_SCREEN(objects[i].location.x, int),
-                    TO_SCREEN(objects[i].location.y, int),
+      DrawRectangle(X_TO_SCREEN(objects[i].location.x, int),
+                    Y_TO_SCREEN(objects[i].location.y, int),
                     GLYPH_WIDTH,
                     GLYPH_HEIGHT,
                     BLACK);
@@ -154,8 +157,8 @@ int main(void) {
       DrawTexturePro(font,
                      glyphs[object_type_to_glyph(objects[i].type)],
                      (Rectangle) {
-                         .x = TO_SCREEN(objects[i].location.x, float),
-                         .y = TO_SCREEN(objects[i].location.y, float),
+                         .x = X_TO_SCREEN(objects[i].location.x, float),
+                         .y = Y_TO_SCREEN(objects[i].location.y, float),
                          .width = GLYPH_WIDTH * SCALING_FACTOR,
                          .height = GLYPH_HEIGHT * SCALING_FACTOR,
                      },
@@ -167,8 +170,8 @@ int main(void) {
     DrawTexturePro(font,
                    glyphs['@'],
                    (Rectangle) {
-                     .x = TO_SCREEN(player_location.x, float),
-                     .y = TO_SCREEN(player_location.y, float),
+                     .x = X_TO_SCREEN(player_location.x, float),
+                     .y = Y_TO_SCREEN(player_location.y, float),
                      .width = GLYPH_WIDTH * SCALING_FACTOR,
                      .height = GLYPH_HEIGHT * SCALING_FACTOR,
                    },
