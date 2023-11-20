@@ -14,6 +14,7 @@
 
 int main(void) {
   srand((unsigned int)time(0));
+  /* srand(3); */
 
   static LevelMap map = {0};
   generate_level(&map);
@@ -34,8 +35,37 @@ int main(void) {
     [TILE_NONE] = BLANK,
     [TILE_WALL] = WHITE,
     [TILE_FLOOR] = GRAY,
-    [TILE_DOOR] = BROWN,
+    [TILE_VERTICAL_CLOSED_DOOR] = BROWN,
+    [TILE_HORIZONTAL_CLOSED_DOOR] = BROWN,
   };
+
+  RenderTexture2D t = LoadRenderTexture(LEVEL_WIDTH * GLYPH_WIDTH * SCALING_FACTOR + (GLYPH_GAP * (LEVEL_WIDTH + 1)),
+                                        LEVEL_HEIGHT * GLYPH_HEIGHT * SCALING_FACTOR + (GLYPH_GAP * (LEVEL_HEIGHT + 1)));
+  BeginTextureMode(t);
+
+  ClearBackground(BLACK);
+
+  for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
+    for (size_t x = 0; x < LEVEL_WIDTH; x++) {
+      LevelTile tile = map[y][x];
+
+      DrawTexturePro(font,
+                     glyphs[tile_to_glyph(tile)],
+                     (Rectangle) {
+                       .x = (float)(x * GLYPH_WIDTH * SCALING_FACTOR) + (float)((GLYPH_GAP * x) + GLYPH_GAP),
+                       .y = (float)(y * GLYPH_HEIGHT * SCALING_FACTOR) + (float)((GLYPH_GAP * y) + GLYPH_GAP),
+                       .width = GLYPH_WIDTH * SCALING_FACTOR,
+                       .height = GLYPH_HEIGHT * SCALING_FACTOR,
+                     },
+                     (Vector2) {0, 0},
+                     0,
+                     tile_colors[tile]);
+    }
+  }
+
+  EndTextureMode();
+
+  ExportImage(LoadImageFromTexture(t.texture), "level.png");
 
   while (!WindowShouldClose()) {
 

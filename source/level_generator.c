@@ -400,7 +400,7 @@ void put_horizontal_path(LevelMap *output_map,
 
   for (size_t xi = x_start; xi <= x_end; xi++) {
     if ((*output_map)[y][xi] == TILE_WALL && roll_dice(2)) {
-      (*output_map)[y][xi] = TILE_DOOR;
+      (*output_map)[y][xi] = TILE_VERTICAL_CLOSED_DOOR;
     } else {
       (*output_map)[y][xi] = TILE_FLOOR;
     }
@@ -423,7 +423,7 @@ void put_vertical_path(LevelMap *output_map,
 
   for (size_t yi = y_start; yi <= y_end; yi++) {
     if ((*output_map)[yi][x] == TILE_WALL && roll_dice(2)) {
-      (*output_map)[yi][x] = TILE_DOOR;
+      (*output_map)[yi][x] = TILE_HORIZONTAL_CLOSED_DOOR;
     } else {
       (*output_map)[yi][x] = TILE_FLOOR;
     }
