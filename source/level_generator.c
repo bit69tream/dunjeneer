@@ -342,20 +342,23 @@ bool is_inside_a_wall(Room rooms[ROOMS_MAX], size_t rooms_len,
   return false;
 }
 
+
+#define RANDOM_POINT_INSIDE_OF_THE_ROOM(point, room)                    \
+  do {                                                                  \
+    (point)->x = (size_t)(((room).x + 1) + (drand48() * ((room).width - 2))); \
+    (point)->y = (size_t)(((room).y + 1) + (drand48() * ((room).height - 2))); \
+  } while (0)
+
 void generate_paths_between_rooms(Room rooms[ROOMS_MAX], size_t rooms_len,
                                   Path paths[PATHS_MAX], size_t *paths_len) {
   for (size_t i = 1; i < rooms_len; i++) {
   try_again:;
 
-    Point point_a = {
-        .x = (size_t)((rooms[i - 1].x + 1) + (drand48() * (rooms[i - 1].width - 2))),
-        .y = (size_t)((rooms[i - 1].y + 1) + (drand48() * (rooms[i - 1].height - 2))),
-    };
+    Point point_a = {0};
+    RANDOM_POINT_INSIDE_OF_THE_ROOM(&point_a, rooms[i - 1]);
 
-    Point point_b = {
-        .x = (size_t)((rooms[i].x + 1) + (drand48() * (rooms[i].width - 2))),
-        .y = (size_t)((rooms[i].y + 1) + (drand48() * (rooms[i].height - 2))),
-    };
+    Point point_b = {0};
+    RANDOM_POINT_INSIDE_OF_THE_ROOM(&point_b, rooms[i]);
 
     size_t new_path = 0;
     PUSH(paths, paths_len, PATHS_MAX, &new_path);
@@ -430,7 +433,7 @@ void put_vertical_path(LevelMap *output_map,
   }
 }
 
-void put_everything_on_a_map(LevelMap *output_map,
+void construct_map(LevelMap *output_map,
                              Room rooms[ROOMS_MAX], size_t rooms_len,
                              Path paths[PATHS_MAX], size_t paths_len) {
   (void)paths;
@@ -505,7 +508,31 @@ void put_everything_on_a_map(LevelMap *output_map,
   }
 }
 
-void generate_level(LevelMap *output_map) {
+void generate_objects(LevelObject objects[OBJECTS_MAX], size_t *objects_len,
+                      Room rooms[ROOMS_MAX], size_t rooms_len, size_t *player_room) {
+
+  size_t elevator_up = 0;
+  PUSH(objects, objects_len, OBJECTS_MAX, &elevator_up);
+
+  size_t i = (size_t)rand_range(0, (int)rooms_len - 1);
+
+  objects[elevator_up].type = OBJECT_ELEVATOR_UP;
+  RANDOM_POINT_INSIDE_OF_THE_ROOM(&objects[elevator_up].location,
+                                  rooms[i]);
+
+  *player_room = (size_t)rand_range(0, (int)rooms_len - 1);
+
+  size_t elevator_down = 0;
+  PUSH(objects, objects_len, OBJECTS_MAX, &elevator_down);
+
+  objects[elevator_down].type = OBJECT_ELEVATOR_DOWN;
+  RANDOM_POINT_INSIDE_OF_THE_ROOM(&objects[elevator_down].location,
+                                  rooms[*player_room]);
+}
+
+void generate_level(LevelMap *output_map,
+                    LevelObject objects[OBJECTS_MAX], size_t *objects_len,
+                    Point *player_location) {
   static Room rooms[ROOMS_MAX] = {0};
   size_t rooms_len = 0;
 
@@ -515,5 +542,13 @@ void generate_level(LevelMap *output_map) {
   generate_rooms(rooms, &rooms_len);
   generate_paths_between_rooms(rooms, rooms_len, paths, &paths_len);
 
-  put_everything_on_a_map(output_map, rooms, rooms_len, paths, paths_len);
+  size_t player_room = 0;
+
+  generate_objects(objects, objects_len,
+                   rooms, rooms_len,
+                   &player_room);
+
+  RANDOM_POINT_INSIDE_OF_THE_ROOM(player_location, rooms[player_room]);
+
+  construct_map(output_map, rooms, rooms_len, paths, paths_len);
 }

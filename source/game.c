@@ -14,10 +14,16 @@
 
 int main(void) {
   srand((unsigned int)time(0));
-  /* srand(3); */
+  /* srand(1); */
 
   static LevelMap map = {0};
-  generate_level(&map);
+
+  static LevelObject objects[OBJECTS_MAX] = {0};
+  size_t objects_len = 0;
+
+  Point player_location = {0};
+
+  generate_level(&map, objects, &objects_len, &player_location);
 
   #define SCALING_FACTOR 1
 
@@ -39,33 +45,45 @@ int main(void) {
     [TILE_HORIZONTAL_CLOSED_DOOR] = BROWN,
   };
 
-  RenderTexture2D t = LoadRenderTexture(LEVEL_WIDTH * GLYPH_WIDTH * SCALING_FACTOR + (GLYPH_GAP * (LEVEL_WIDTH + 1)),
-                                        LEVEL_HEIGHT * GLYPH_HEIGHT * SCALING_FACTOR + (GLYPH_GAP * (LEVEL_HEIGHT + 1)));
-  BeginTextureMode(t);
+  static_assert(SIZE_OF(tile_colors) == LEVEL_TILE_COUNT);
 
-  ClearBackground(BLACK);
+  Color object_colors[] = {
+    [OBJECT_NONE] = BLANK,
+    [OBJECT_ELEVATOR_DOWN] = WHITE,
+    [OBJECT_ELEVATOR_UP] = WHITE,
+  };
 
-  for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
-    for (size_t x = 0; x < LEVEL_WIDTH; x++) {
-      LevelTile tile = map[y][x];
+  static_assert(SIZE_OF(object_colors) == LEVEL_OBJECT_COUNT);
 
-      DrawTexturePro(font,
-                     glyphs[tile_to_glyph(tile)],
-                     (Rectangle) {
-                       .x = (float)(x * GLYPH_WIDTH * SCALING_FACTOR) + (float)((GLYPH_GAP * x) + GLYPH_GAP),
-                       .y = (float)(y * GLYPH_HEIGHT * SCALING_FACTOR) + (float)((GLYPH_GAP * y) + GLYPH_GAP),
-                       .width = GLYPH_WIDTH * SCALING_FACTOR,
-                       .height = GLYPH_HEIGHT * SCALING_FACTOR,
-                     },
-                     (Vector2) {0, 0},
-                     0,
-                     tile_colors[tile]);
-    }
-  }
+  /* RenderTexture2D t = LoadRenderTexture(LEVEL_WIDTH * GLYPH_WIDTH * SCALING_FACTOR + (GLYPH_GAP * (LEVEL_WIDTH + 1)), */
+  /*                                       LEVEL_HEIGHT * GLYPH_HEIGHT * SCALING_FACTOR + (GLYPH_GAP * (LEVEL_HEIGHT + 1))); */
+  /* BeginTextureMode(t); */
 
-  EndTextureMode();
+  /* ClearBackground(BLACK); */
 
-  ExportImage(LoadImageFromTexture(t.texture), "level.png");
+  /* for (size_t y = 0; y < LEVEL_HEIGHT; y++) { */
+  /*   for (size_t x = 0; x < LEVEL_WIDTH; x++) { */
+  /*     LevelTile tile = map[y][x]; */
+
+  /*     DrawTexturePro(font, */
+  /*                    glyphs[tile_to_glyph(tile)], */
+  /*                    (Rectangle) { */
+  /*                      .x = (float)(x * GLYPH_WIDTH * SCALING_FACTOR) + (float)((GLYPH_GAP * x) + GLYPH_GAP), */
+  /*                      .y = (float)(y * GLYPH_HEIGHT * SCALING_FACTOR) + (float)((GLYPH_GAP * y) + GLYPH_GAP), */
+  /*                      .width = GLYPH_WIDTH * SCALING_FACTOR, */
+  /*                      .height = GLYPH_HEIGHT * SCALING_FACTOR, */
+  /*                    }, */
+  /*                    (Vector2) {0, 0}, */
+  /*                    0, */
+  /*                    tile_colors[tile]); */
+  /*   } */
+  /* } */
+
+  /* EndTextureMode(); */
+
+  /* ExportImage(LoadImageFromTexture(t.texture), "level.png"); */
+
+#define TO_SCREEN(x, type) ((type)((x) * GLYPH_WIDTH * SCALING_FACTOR) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
 
   while (!WindowShouldClose()) {
 
@@ -80,8 +98,8 @@ int main(void) {
         DrawTexturePro(font,
                        glyphs[tile_to_glyph(tile)],
                        (Rectangle) {
-                         .x = (float)(x * GLYPH_WIDTH * SCALING_FACTOR) + (float)((GLYPH_GAP * x) + GLYPH_GAP),
-                         .y = (float)(y * GLYPH_HEIGHT * SCALING_FACTOR) + (float)((GLYPH_GAP * y) + GLYPH_GAP),
+                         .x = TO_SCREEN(x, float),
+                         .y = TO_SCREEN(y, float),
                          .width = GLYPH_WIDTH * SCALING_FACTOR,
                          .height = GLYPH_HEIGHT * SCALING_FACTOR,
                        },
@@ -90,6 +108,39 @@ int main(void) {
                        tile_colors[tile]);
       }
     }
+
+    for (size_t i = 0; i < objects_len; i++) {
+      DrawRectangle(TO_SCREEN(objects[i].location.x, int),
+                    TO_SCREEN(objects[i].location.y, int),
+                    GLYPH_WIDTH,
+                    GLYPH_HEIGHT,
+                    BLACK);
+
+      DrawTexturePro(font,
+                     glyphs[object_type_to_glyph(objects[i].type)],
+                     (Rectangle) {
+                         .x = TO_SCREEN(objects[i].location.x, float),
+                         .y = TO_SCREEN(objects[i].location.y, float),
+                         .width = GLYPH_WIDTH * SCALING_FACTOR,
+                         .height = GLYPH_HEIGHT * SCALING_FACTOR,
+                     },
+                     (Vector2) {0, 0},
+                     0,
+                     object_colors[objects[i].type]);
+    }
+
+    DrawTexturePro(font,
+                   glyphs['@'],
+                   (Rectangle) {
+                     .x = TO_SCREEN(player_location.x, float),
+                     .y = TO_SCREEN(player_location.y, float),
+                     .width = GLYPH_WIDTH * SCALING_FACTOR,
+                     .height = GLYPH_HEIGHT * SCALING_FACTOR,
+                   },
+                   (Vector2) {0, 0},
+                   0,
+                   GREEN);
+
 
     EndDrawing();
   }

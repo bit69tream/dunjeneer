@@ -143,3 +143,13 @@ size_t tile_to_glyph(LevelTile tile) {
   default: assert(false && "unknown tile");
   }
 }
+
+size_t object_type_to_glyph(LevelObjectType object_type) {
+  switch (object_type) {
+  case OBJECT_NONE: assert(false && "skill issue");
+  case OBJECT_ELEVATOR_DOWN: return '>';
+  case OBJECT_ELEVATOR_UP: return '<';
+  case LEVEL_OBJECT_COUNT: assert(false && "nuh uh");
+  default: assert(false && "unknown object type");
+  }
+}
