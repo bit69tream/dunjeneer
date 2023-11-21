@@ -75,6 +75,8 @@ int main(void) {
     [TILE_FLOOR] = DARKGRAY,
     [TILE_VERTICAL_CLOSED_DOOR] = BROWN,
     [TILE_HORIZONTAL_CLOSED_DOOR] = BROWN,
+    [TILE_VERTICAL_OPENED_DOOR] = BROWN,
+    [TILE_HORIZONTAL_OPENED_DOOR] = BROWN,
   };
 
   static_assert(SIZE_OF(tile_colors) == LEVEL_TILE_COUNT);
@@ -130,7 +132,9 @@ int main(void) {
       if ((player_direction == DIRECTION_NONE ||
            player_direction == DIRECTION_LEFT ||
            player_direction == DIRECTION_RIGHT) &&
-          map[player_location.y - 1][player_location.x] == TILE_FLOOR) {
+          ((map[player_location.y - 1][player_location.x] == TILE_FLOOR) ||
+           (map[player_location.y - 1][player_location.x] == TILE_VERTICAL_OPENED_DOOR) ||
+           (map[player_location.y - 1][player_location.x] == TILE_HORIZONTAL_OPENED_DOOR))) {
         player_direction |= DIRECTION_UP;
         player_y_delta = (GLYPH_HEIGHT + GLYPH_GAP);
         player_location.y -= 1;
@@ -141,7 +145,9 @@ int main(void) {
       if ((player_direction == DIRECTION_NONE ||
            player_direction == DIRECTION_DOWN ||
            player_direction == DIRECTION_UP) &&
-          map[player_location.y][player_location.x - 1] == TILE_FLOOR) {
+          ((map[player_location.y][player_location.x - 1] == TILE_FLOOR) ||
+           (map[player_location.y][player_location.x - 1] == TILE_VERTICAL_OPENED_DOOR) ||
+           (map[player_location.y][player_location.x - 1] == TILE_HORIZONTAL_OPENED_DOOR))) {
         player_direction |= DIRECTION_LEFT;
         player_x_delta = (GLYPH_WIDTH + GLYPH_GAP);
         player_location.x -= 1;
@@ -152,7 +158,9 @@ int main(void) {
       if ((player_direction == DIRECTION_NONE ||
            player_direction == DIRECTION_LEFT ||
            player_direction == DIRECTION_RIGHT) &&
-          map[player_location.y + 1][player_location.x] == TILE_FLOOR) {
+          ((map[player_location.y + 1][player_location.x] == TILE_FLOOR) ||
+           (map[player_location.y + 1][player_location.x] == TILE_VERTICAL_OPENED_DOOR) ||
+           (map[player_location.y + 1][player_location.x] == TILE_HORIZONTAL_OPENED_DOOR))) {
         player_direction |= DIRECTION_DOWN;
         player_y_delta = -(GLYPH_HEIGHT + GLYPH_GAP);
         player_location.y += 1;
@@ -163,14 +171,14 @@ int main(void) {
       if ((player_direction == DIRECTION_NONE ||
            player_direction == DIRECTION_UP ||
            player_direction == DIRECTION_DOWN) &&
-          map[player_location.y][player_location.x + 1] == TILE_FLOOR) {
+          ((map[player_location.y][player_location.x + 1] == TILE_FLOOR) ||
+           (map[player_location.y][player_location.x + 1] == TILE_VERTICAL_OPENED_DOOR) ||
+           (map[player_location.y][player_location.x + 1] == TILE_HORIZONTAL_OPENED_DOOR))) {
         player_direction |= DIRECTION_RIGHT;
         player_x_delta = -(GLYPH_WIDTH + GLYPH_GAP);
         player_location.x += 1;
       }
     }
-
-    printf("%ld %ld\n", player_x_delta, player_y_delta);
 
     if (player_direction != DIRECTION_NONE) {
       if (player_x_delta == 0) {

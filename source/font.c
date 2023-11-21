@@ -140,8 +140,12 @@ size_t tile_to_glyph(LevelTile tile) {
   case TILE_VERTICAL_CLOSED_DOOR: return '|';
   case TILE_HORIZONTAL_CLOSED_DOOR: return '-';
   case TILE_FLOOR: return SPECIAL_GLYPH_CENTERED_DOT;
-  default: assert(false && "unknown tile");
+  case TILE_VERTICAL_OPENED_DOOR: return '_';
+  case TILE_HORIZONTAL_OPENED_DOOR: return '|';
+  case LEVEL_TILE_COUNT: assert(false && "bruh");
   }
+
+  assert(false && "unknown tile");
 }
 
 size_t object_type_to_glyph(LevelObjectType object_type) {
@@ -150,6 +154,7 @@ size_t object_type_to_glyph(LevelObjectType object_type) {
   case OBJECT_ELEVATOR_DOWN: return '>';
   case OBJECT_ELEVATOR_UP: return '<';
   case LEVEL_OBJECT_COUNT: assert(false && "nuh uh");
-  default: assert(false && "unknown object type");
   }
+
+  assert(false && "unknown tile");
 }
