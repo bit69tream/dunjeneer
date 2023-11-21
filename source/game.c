@@ -95,8 +95,6 @@ int main(void) {
   camera.rotation = 0;
   camera.zoom = 6;
 
-  /* TODO: blocky or fast movement + smooth camera */
-
   camera.target.x = X_TO_SCREEN(player_location.x, float) + (GLYPH_WIDTH / 2.0f);
   camera.target.y = Y_TO_SCREEN(player_location.y, float) + (GLYPH_HEIGHT / 2.0f);
 
