@@ -76,39 +76,8 @@ int main(void) {
 
   assert(IsShaderReady(cursor_shader));
 
-  /* RenderTexture2D t = LoadRenderTexture(LEVEL_WIDTH * GLYPH_WIDTH * SCALING_FACTOR + (GLYPH_GAP * (LEVEL_WIDTH + 1)), */
-  /*                                       LEVEL_HEIGHT * GLYPH_HEIGHT * SCALING_FACTOR + (GLYPH_GAP * (LEVEL_HEIGHT + 1))); */
-  /* BeginTextureMode(t); */
-
-  /* ClearBackground(BLACK); */
-
-  /* for (size_t y = 0; y < LEVEL_HEIGHT; y++) { */
-  /*   for (size_t x = 0; x < LEVEL_WIDTH; x++) { */
-  /*     LevelTile tile = map[y][x]; */
-
-  /*     DrawTexturePro(font, */
-  /*                    glyphs[tile_to_glyph(tile)], */
-  /*                    (Rectangle) { */
-  /*                      .x = (float)(x * GLYPH_WIDTH * SCALING_FACTOR) + (float)((GLYPH_GAP * x) + GLYPH_GAP), */
-  /*                      .y = (float)(y * GLYPH_HEIGHT * SCALING_FACTOR) + (float)((GLYPH_GAP * y) + GLYPH_GAP), */
-  /*                      .width = GLYPH_WIDTH * SCALING_FACTOR, */
-  /*                      .height = GLYPH_HEIGHT * SCALING_FACTOR, */
-  /*                    }, */
-  /*                    (Vector2) {0, 0}, */
-  /*                    0, */
-  /*                    tile_colors[tile]); */
-  /*   } */
-  /* } */
-
-  /* EndTextureMode(); */
-
-  /* ExportImage(LoadImageFromTexture(t.texture), "level.png"); */
-
 #define X_TO_SCREEN(x, type) ((type)((x) * GLYPH_WIDTH * SCALING_FACTOR) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
 #define Y_TO_SCREEN(x, type) ((type)((x) * GLYPH_HEIGHT * SCALING_FACTOR) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
-
-  player_location.x = X_TO_SCREEN(player_location.x, size_t);
-  player_location.y = X_TO_SCREEN(player_location.y, size_t);
 
   Camera2D camera = {0};
 
@@ -116,12 +85,6 @@ int main(void) {
   camera.zoom = 4;
 
   /* TODO: blocky or fast movement + smooth camera */
-
-  #define MOVEMENT_DELTA_MAX 30
-  #define MOVEMENT_DELTA_STEP 30
-
-  ssize_t x_delta = 0;
-  ssize_t y_delta = 0;
 
   camera.target.x = X_TO_SCREEN(player_location.x, float) + (GLYPH_WIDTH / 2.0f);
   camera.target.y = Y_TO_SCREEN(player_location.y, float) + (GLYPH_HEIGHT / 2.0f);
@@ -131,58 +94,26 @@ int main(void) {
   while (!WindowShouldClose()) {
 
     if (IsKeyDown(KEY_E)) {
-      if (y_delta > 0) {
-        y_delta = 0;
-      }
-      /* player_location.y -= 1; */
-      y_delta -= MOVEMENT_DELTA_STEP;
+      player_location.y -= 1;
     }
 
     if (IsKeyDown(KEY_S)) {
-      if (x_delta > 0) {
-        x_delta = 0;
-      }
-      /* player_location.x -= 1; */
-      x_delta -= MOVEMENT_DELTA_STEP;
+      player_location.x -= 1;
     }
 
     if (IsKeyDown(KEY_D)) {
-      if (y_delta < 0) {
-        y_delta = 0;
-      }
-      /* player_location.y += 1; */
-      y_delta += MOVEMENT_DELTA_STEP;
+      player_location.y += 1;
     }
 
     if (IsKeyDown(KEY_F)) {
-      if (x_delta < 0) {
-        x_delta = 0;
-      }
-      /* player_location.x += 1; */
-      x_delta += MOVEMENT_DELTA_STEP;
+      player_location.x += 1;
     }
 
-    if (x_delta != 0 && x_delta % MOVEMENT_DELTA_MAX == 0) {
-      player_location.x = (size_t)((ssize_t)player_location.x + (x_delta / MOVEMENT_DELTA_MAX));
-      x_delta = 0;
-    }
+    player_location.x = CLAMP(1, LEVEL_WIDTH, player_location.x);
+    player_location.y = CLAMP(1, LEVEL_HEIGHT, player_location.y);
 
-    if (y_delta != 0 && y_delta % MOVEMENT_DELTA_MAX == 0) {
-      player_location.y = (size_t)((ssize_t)player_location.y + (y_delta / MOVEMENT_DELTA_MAX));
-      y_delta = 0;
-    }
-
-    /* player_location.x = CLAMP(1, LEVEL_WIDTH, player_location.x); */
-    /* player_location.y = CLAMP(1, LEVEL_HEIGHT, player_location.y); */
-
-    player_location.x = CLAMP(1, X_TO_SCREEN(LEVEL_WIDTH, size_t), player_location.x);
-    player_location.y = CLAMP(1, Y_TO_SCREEN(LEVEL_HEIGHT, size_t), player_location.y);
-
-    /* float player_screen_x = X_TO_SCREEN(player_location.x, float) + (GLYPH_WIDTH / 2.0f); */
-    /* float player_screen_y = Y_TO_SCREEN(player_location.y, float) + (GLYPH_HEIGHT / 2.0f); */
-
-    float player_screen_x = (float)player_location.x + (GLYPH_WIDTH / 2.0f);
-    float player_screen_y = (float)player_location.y + (GLYPH_HEIGHT / 2.0f);
+    float player_screen_x = X_TO_SCREEN(player_location.x, float) + (GLYPH_WIDTH / 2.0f);
+    float player_screen_y = Y_TO_SCREEN(player_location.y, float) + (GLYPH_HEIGHT / 2.0f);
 
     camera.target.x = LERP(camera.target.x, player_screen_x, 0.1f);
     camera.target.y = LERP(camera.target.y, player_screen_y, 0.1f);
@@ -234,19 +165,27 @@ int main(void) {
                      object_colors[objects[i].type]);
     }
 
+    DrawRectanglePro((Rectangle) {
+                     .x = X_TO_SCREEN(player_location.x, float) - GLYPH_GAP,
+                     .y = Y_TO_SCREEN(player_location.y, float) - GLYPH_GAP,
+                     .width = (GLYPH_WIDTH + (GLYPH_GAP * 2)) * SCALING_FACTOR,
+                     .height = (GLYPH_HEIGHT + (GLYPH_GAP * 2)) * SCALING_FACTOR,
+                   },
+                   (Vector2) {0, 0},
+                   0,
+                   GREEN);
+
     DrawTexturePro(font,
                    glyphs['@'],
                    (Rectangle) {
-                     /* .x = X_TO_SCREEN(player_location.x, float), */
-                     /* .y = Y_TO_SCREEN(player_location.y, float), */
-                     .x = (float)player_location.x,
-                     .y = (float)player_location.y,
+                     .x = X_TO_SCREEN(player_location.x, float),
+                     .y = Y_TO_SCREEN(player_location.y, float),
                      .width = GLYPH_WIDTH * SCALING_FACTOR,
                      .height = GLYPH_HEIGHT * SCALING_FACTOR,
                    },
                    (Vector2) {0, 0},
                    0,
-                   GREEN);
+                   BLACK);
 
     Vector2 mouse_in_world = GetScreenToWorld2D(GetMousePosition(), camera);
 
