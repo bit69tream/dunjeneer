@@ -93,7 +93,7 @@ int main(void) {
   Camera2D camera = {0};
 
   camera.rotation = 0;
-  camera.zoom = 4;
+  camera.zoom = 6;
 
   /* TODO: blocky or fast movement + smooth camera */
 
@@ -116,22 +116,92 @@ int main(void) {
 
   int cursor_shader_mouse_cursor = GetShaderLocation(cursor_shader, "mouse_cursor");
 
-  while (!WindowShouldClose()) {
+  enum {
+    DIRECTION_NONE = 0,
+    DIRECTION_UP = 1 << 0,
+    DIRECTION_LEFT = 1 << 1,
+    DIRECTION_DOWN = 1 << 2,
+    DIRECTION_RIGHT = 1 << 3,
+  } player_direction = DIRECTION_NONE;
 
+  ssize_t player_x_delta = 0;
+  ssize_t player_y_delta = 0;
+
+  while (!WindowShouldClose()) {
     if (IsKeyDown(KEY_E)) {
-      player_location.y -= 1;
+      if ((player_direction == DIRECTION_NONE ||
+           player_direction == DIRECTION_LEFT ||
+           player_direction == DIRECTION_RIGHT) &&
+          map[player_location.y - 1][player_location.x] == TILE_FLOOR) {
+        player_direction |= DIRECTION_UP;
+        player_y_delta = (GLYPH_HEIGHT + GLYPH_GAP);
+        player_location.y -= 1;
+      }
     }
 
     if (IsKeyDown(KEY_S)) {
-      player_location.x -= 1;
+      if ((player_direction == DIRECTION_NONE ||
+           player_direction == DIRECTION_DOWN ||
+           player_direction == DIRECTION_UP) &&
+          map[player_location.y][player_location.x - 1] == TILE_FLOOR) {
+        player_direction |= DIRECTION_LEFT;
+        player_x_delta = (GLYPH_WIDTH + GLYPH_GAP);
+        player_location.x -= 1;
+      }
     }
 
     if (IsKeyDown(KEY_D)) {
-      player_location.y += 1;
+      if ((player_direction == DIRECTION_NONE ||
+           player_direction == DIRECTION_LEFT ||
+           player_direction == DIRECTION_RIGHT) &&
+          map[player_location.y + 1][player_location.x] == TILE_FLOOR) {
+        player_direction |= DIRECTION_DOWN;
+        player_y_delta = -(GLYPH_HEIGHT + GLYPH_GAP);
+        player_location.y += 1;
+      }
     }
 
     if (IsKeyDown(KEY_F)) {
-      player_location.x += 1;
+      if ((player_direction == DIRECTION_NONE ||
+           player_direction == DIRECTION_UP ||
+           player_direction == DIRECTION_DOWN) &&
+          map[player_location.y][player_location.x + 1] == TILE_FLOOR) {
+        player_direction |= DIRECTION_RIGHT;
+        player_x_delta = -(GLYPH_WIDTH + GLYPH_GAP);
+        player_location.x += 1;
+      }
+    }
+
+    printf("%ld %ld\n", player_x_delta, player_y_delta);
+
+    if (player_direction != DIRECTION_NONE) {
+      if (player_x_delta == 0) {
+        player_direction = player_direction & (unsigned int)(~DIRECTION_LEFT);
+        player_direction = player_direction & (unsigned int)(~DIRECTION_RIGHT);
+      }
+
+      if (player_y_delta == 0) {
+        player_direction = player_direction & (unsigned int)(~DIRECTION_UP);
+        player_direction = player_direction & (unsigned int)(~DIRECTION_DOWN);
+      }
+
+      if (player_direction & DIRECTION_LEFT ||
+          player_direction & DIRECTION_RIGHT) {
+        if (player_x_delta < 0) {
+          player_x_delta += 1;
+        } else {
+          player_x_delta -= 1;
+        }
+      }
+
+      if (player_direction & DIRECTION_UP ||
+          player_direction & DIRECTION_DOWN) {
+        if (player_y_delta < 0) {
+          player_y_delta += 1;
+        } else {
+          player_y_delta -= 1;
+        }
+      }
     }
 
     player_location.x = CLAMP(1, LEVEL_WIDTH - 2, player_location.x);
@@ -188,8 +258,8 @@ int main(void) {
       }
 
       DrawRectanglePro((Rectangle) {
-          .x = X_TO_SCREEN(player_location.x, float) - GLYPH_GAP,
-          .y = Y_TO_SCREEN(player_location.y, float) - GLYPH_GAP,
+          .x = (X_TO_SCREEN(player_location.x, float) - GLYPH_GAP) + (float)player_x_delta,
+          .y = (Y_TO_SCREEN(player_location.y, float) - GLYPH_GAP) + (float)player_y_delta,
           .width = (GLYPH_WIDTH + (GLYPH_GAP * 2)),
           .height = (GLYPH_HEIGHT + (GLYPH_GAP * 2)),
         },
@@ -200,8 +270,8 @@ int main(void) {
       DrawTexturePro(font,
                      glyphs['@'],
                      (Rectangle) {
-                       .x = X_TO_SCREEN(player_location.x, float),
-                       .y = Y_TO_SCREEN(player_location.y, float),
+                       .x = X_TO_SCREEN(player_location.x, float) + (float)player_x_delta,
+                       .y = Y_TO_SCREEN(player_location.y, float) + (float)player_y_delta,
                        .width = GLYPH_WIDTH,
                        .height = GLYPH_HEIGHT,
                      },

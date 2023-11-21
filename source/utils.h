@@ -20,5 +20,6 @@
 #define MIN(a, b) (a < b ? a : b)
 
 #define CLAMP(start, end, value) (MIN(MAX(value, start), end))
+#define CLAMPF(start, end, value) (fminf(fmaxf(value, start), end))
 
 #define LERP(a, b, t) (a + (t * (b - a)))
