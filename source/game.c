@@ -13,6 +13,37 @@
 #include "utils.h"
 #include "font.h"
 
+static const char *cursor_shader_source =
+  "#version 330\n\n"
+
+  // Input vertex attributes (from vertex shader)
+  "in vec2 fragTexCoord;\n"
+  "in vec4 fragColor;\n"
+
+  // Input uniform values
+  "uniform sampler2D texture0;\n"
+  "uniform vec4 colDiffuse;\n"
+
+  // Output fragment color
+  "out vec4 finalColor;\n"
+
+  // custom variables
+  "uniform vec2 resolution;\n"
+  "uniform vec4 mouse_cursor;\n"
+
+  "void main() {\n"
+  "    vec4 texelColor = texture(texture0, fragTexCoord)*colDiffuse*fragColor;\n"
+  "    vec2 pixelCoord = vec2(fragTexCoord.x * resolution.x, (1.0 - fragTexCoord.y) * resolution.y);\n"
+  "    if ((pixelCoord.x >= mouse_cursor.x) && \n"
+  "        (pixelCoord.y >= mouse_cursor.y) && \n"
+  "        (pixelCoord.x < (mouse_cursor.x + mouse_cursor.z)) && \n"
+  "        (pixelCoord.y < (mouse_cursor.y + mouse_cursor.w))) {\n"
+  "        finalColor = vec4(1.0 - texelColor.r, 1.0 - texelColor.g, 1.0 - texelColor.b, 1.0);\n"
+  "    } else { \n"
+  "        finalColor = texelColor;\n"
+  "    }\n"
+  "}\n";
+
 int main(void) {
   srand((unsigned int)time(0));
   /* srand(1); */
@@ -71,6 +102,20 @@ int main(void) {
 
   /* TODO: https://www.squidi.net/three/entry.php?id=83 */
 
+  RenderTexture2D world = LoadRenderTexture(X_TO_SCREEN(LEVEL_WIDTH, int),
+                                            Y_TO_SCREEN(LEVEL_HEIGHT, int));
+
+  Shader cursor_shader = LoadShaderFromMemory(NULL, cursor_shader_source);
+  assert(IsShaderReady(cursor_shader));
+
+  int cursor_shader_resolution = GetShaderLocation(cursor_shader, "resolution");
+  static Vector2 resolution = {0};
+  resolution.x = (float)world.texture.width;
+  resolution.y = (float)world.texture.height;
+  SetShaderValue(cursor_shader, cursor_shader_resolution, &resolution, SHADER_UNIFORM_VEC2);
+
+  int cursor_shader_mouse_cursor = GetShaderLocation(cursor_shader, "mouse_cursor");
+
   while (!WindowShouldClose()) {
 
     if (IsKeyDown(KEY_E)) {
@@ -89,8 +134,8 @@ int main(void) {
       player_location.x += 1;
     }
 
-    player_location.x = CLAMP(1, LEVEL_WIDTH, player_location.x);
-    player_location.y = CLAMP(1, LEVEL_HEIGHT, player_location.y);
+    player_location.x = CLAMP(1, LEVEL_WIDTH - 2, player_location.x);
+    player_location.y = CLAMP(1, LEVEL_HEIGHT - 2, player_location.y);
 
     float player_screen_x = X_TO_SCREEN(player_location.x, float) + (GLYPH_WIDTH / 2.0f);
     float player_screen_y = Y_TO_SCREEN(player_location.y, float) + (GLYPH_HEIGHT / 2.0f);
@@ -101,96 +146,109 @@ int main(void) {
     camera.offset.x = (float)GetScreenWidth() / 2.0f;
     camera.offset.y = (float)GetScreenHeight() / 2.0f;
 
-    BeginDrawing();
+    BeginTextureMode(world); {
+      ClearBackground(BLACK);
 
-    ClearBackground(BLACK);
+      for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
+        for (size_t x = 0; x < LEVEL_WIDTH; x++) {
+          LevelTile tile = map[y][x];
 
-    BeginMode2D(camera);
+          DrawTexturePro(font,
+                         glyphs[tile_to_glyph(tile)],
+                         (Rectangle) {
+                           .x = X_TO_SCREEN(x, float),
+                           .y = Y_TO_SCREEN(y, float),
+                           .width = GLYPH_WIDTH,
+                           .height = GLYPH_HEIGHT,
+                         },
+                         (Vector2) {0, 0},
+                         0,
+                         tile_colors[tile]);
+        }
+      }
 
-    for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
-      for (size_t x = 0; x < LEVEL_WIDTH; x++) {
-        LevelTile tile = map[y][x];
+      for (size_t i = 0; i < objects_len; i++) {
+        DrawRectangle(X_TO_SCREEN(objects[i].location.x, int),
+                      Y_TO_SCREEN(objects[i].location.y, int),
+                      GLYPH_WIDTH,
+                      GLYPH_HEIGHT,
+                      BLACK);
 
         DrawTexturePro(font,
-                       glyphs[tile_to_glyph(tile)],
+                       glyphs[object_type_to_glyph(objects[i].type)],
                        (Rectangle) {
-                         .x = X_TO_SCREEN(x, float),
-                         .y = Y_TO_SCREEN(y, float),
+                         .x = X_TO_SCREEN(objects[i].location.x, float),
+                         .y = Y_TO_SCREEN(objects[i].location.y, float),
                          .width = GLYPH_WIDTH,
                          .height = GLYPH_HEIGHT,
                        },
                        (Vector2) {0, 0},
                        0,
-                       tile_colors[tile]);
+                       object_colors[objects[i].type]);
       }
-    }
 
-    for (size_t i = 0; i < objects_len; i++) {
-      DrawRectangle(X_TO_SCREEN(objects[i].location.x, int),
-                    Y_TO_SCREEN(objects[i].location.y, int),
-                    GLYPH_WIDTH,
-                    GLYPH_HEIGHT,
-                    BLACK);
+      DrawRectanglePro((Rectangle) {
+          .x = X_TO_SCREEN(player_location.x, float) - GLYPH_GAP,
+          .y = Y_TO_SCREEN(player_location.y, float) - GLYPH_GAP,
+          .width = (GLYPH_WIDTH + (GLYPH_GAP * 2)),
+          .height = (GLYPH_HEIGHT + (GLYPH_GAP * 2)),
+        },
+        (Vector2) {0, 0},
+        0,
+        GREEN);
 
       DrawTexturePro(font,
-                     glyphs[object_type_to_glyph(objects[i].type)],
+                     glyphs['@'],
                      (Rectangle) {
-                         .x = X_TO_SCREEN(objects[i].location.x, float),
-                         .y = Y_TO_SCREEN(objects[i].location.y, float),
-                         .width = GLYPH_WIDTH,
-                         .height = GLYPH_HEIGHT,
+                       .x = X_TO_SCREEN(player_location.x, float),
+                       .y = Y_TO_SCREEN(player_location.y, float),
+                       .width = GLYPH_WIDTH,
+                       .height = GLYPH_HEIGHT,
                      },
                      (Vector2) {0, 0},
                      0,
-                     object_colors[objects[i].type]);
-    }
+                     BLACK);
+    } EndTextureMode();
 
-    DrawRectanglePro((Rectangle) {
-                     .x = X_TO_SCREEN(player_location.x, float) - GLYPH_GAP,
-                     .y = Y_TO_SCREEN(player_location.y, float) - GLYPH_GAP,
-                     .width = (GLYPH_WIDTH + (GLYPH_GAP * 2)),
-                     .height = (GLYPH_HEIGHT + (GLYPH_GAP * 2)),
-                   },
-                   (Vector2) {0, 0},
-                   0,
-                   GREEN);
+    BeginDrawing(); {
+      ClearBackground(BLACK);
 
-    DrawTexturePro(font,
-                   glyphs['@'],
-                   (Rectangle) {
-                     .x = X_TO_SCREEN(player_location.x, float),
-                     .y = Y_TO_SCREEN(player_location.y, float),
-                     .width = GLYPH_WIDTH,
-                     .height = GLYPH_HEIGHT,
-                   },
-                   (Vector2) {0, 0},
-                   0,
-                   BLACK);
+      BeginMode2D(camera); {
+        Vector2 mouse_on_screen = GetScreenToWorld2D(GetMousePosition(), camera);
 
-    Vector2 mouse_on_screen = GetScreenToWorld2D(GetMousePosition(), camera);
+        Point mouse_in_world = {
+          .x = (size_t)((mouse_on_screen.x) / (GLYPH_WIDTH + 1)),
+          .y = (size_t)((mouse_on_screen.y) / (GLYPH_HEIGHT + 1)),
+        };
 
-    Point mouse_in_world = {
-      .x = (size_t)((mouse_on_screen.x) / (GLYPH_WIDTH + 1)),
-      .y = (size_t)((mouse_on_screen.y) / (GLYPH_HEIGHT + 1)),
-    };
+        Vector4 mouse_cursor = {
+          .x = X_TO_SCREEN(mouse_in_world.x, float) - GLYPH_GAP,
+          .y = (Y_TO_SCREEN(mouse_in_world.y, float) - GLYPH_GAP),
+          .z = GLYPH_WIDTH + (GLYPH_GAP * 2),
+          .w = GLYPH_HEIGHT + (GLYPH_GAP * 2),
+        };
 
-    /* TODO: нужно зарендерить всё в текстуру, а потом рисовать курсор полностью в шейдере */
+        SetShaderValue(cursor_shader, cursor_shader_mouse_cursor,
+                       &mouse_cursor, SHADER_UNIFORM_VEC4);
 
-    DrawRectanglePro((Rectangle) {
-        .x = X_TO_SCREEN(mouse_in_world.x, float) - GLYPH_GAP,
-        .y = Y_TO_SCREEN(mouse_in_world.y, float) - GLYPH_GAP,
-        .width = GLYPH_WIDTH + (GLYPH_GAP * 2),
-        .height = GLYPH_HEIGHT + (GLYPH_GAP * 2),
-      },
-      (Vector2) {0, 0},
-      0,
-      WHITE);
+        BeginShaderMode(cursor_shader); {
+          DrawTextureRec(world.texture,
+                         (Rectangle) {
+                           .x = 0,
+                           .y = 0,
+                           .width = (float)world.texture.width,
+                           .height = (float)-world.texture.height,
+                         },
+                         (Vector2) {0, 0},
+                         WHITE);
+        } EndShaderMode();
 
-    EndMode2D();
-
-    EndDrawing();
+      } EndMode2D();
+    } EndDrawing();
   }
 
+  UnloadShader(cursor_shader);
+  UnloadRenderTexture(world);
   UnloadTexture(font);
 
   CloseWindow();
