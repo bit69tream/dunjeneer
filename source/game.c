@@ -26,8 +26,6 @@ int main(void) {
 
   generate_level(&map, objects, &objects_len, &player_location);
 
-  #define SCALING_FACTOR 1
-
   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
   /* TODO: adapt ui to the window size, tell user that window is too small when it is */
   /* TODO: calculate the minimal window size when the ui is ready */
@@ -58,26 +56,8 @@ int main(void) {
 
   static_assert(SIZE_OF(object_colors) == LEVEL_OBJECT_COUNT);
 
-  Shader cursor_shader = LoadShaderFromMemory(NULL,
-                                              "#version 330\n\n"
-
-                                              "out vec4 finalColor;\n\n"
-
-                                              "uniform sampler2D texture0;\n"
-                                              "uniform vec4 colDiffuse;\n\n"
-
-                                              "in vec4 fragColor;\n"
-                                              "in vec2 fragTexCoord;\n\n"
-
-                                              "void main() {\n"
-                                              "    vec4 texelColor = texture(texture0, fragTexCoord)*colDiffuse*fragColor;\n"
-                                              "    finalColor = vec4(1.0 - texelColor.r, 1.0 - texelColor.g, 1.0 - texelColor.b, 1.0);"
-                                              "}\n");
-
-  assert(IsShaderReady(cursor_shader));
-
-#define X_TO_SCREEN(x, type) ((type)((x) * GLYPH_WIDTH * SCALING_FACTOR) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
-#define Y_TO_SCREEN(x, type) ((type)((x) * GLYPH_HEIGHT * SCALING_FACTOR) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
+#define X_TO_SCREEN(x, type) ((type)((x) * GLYPH_WIDTH) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
+#define Y_TO_SCREEN(x, type) ((type)((x) * GLYPH_HEIGHT) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
 
   Camera2D camera = {0};
 
@@ -136,8 +116,8 @@ int main(void) {
                        (Rectangle) {
                          .x = X_TO_SCREEN(x, float),
                          .y = Y_TO_SCREEN(y, float),
-                         .width = GLYPH_WIDTH * SCALING_FACTOR,
-                         .height = GLYPH_HEIGHT * SCALING_FACTOR,
+                         .width = GLYPH_WIDTH,
+                         .height = GLYPH_HEIGHT,
                        },
                        (Vector2) {0, 0},
                        0,
@@ -157,8 +137,8 @@ int main(void) {
                      (Rectangle) {
                          .x = X_TO_SCREEN(objects[i].location.x, float),
                          .y = Y_TO_SCREEN(objects[i].location.y, float),
-                         .width = GLYPH_WIDTH * SCALING_FACTOR,
-                         .height = GLYPH_HEIGHT * SCALING_FACTOR,
+                         .width = GLYPH_WIDTH,
+                         .height = GLYPH_HEIGHT,
                      },
                      (Vector2) {0, 0},
                      0,
@@ -168,8 +148,8 @@ int main(void) {
     DrawRectanglePro((Rectangle) {
                      .x = X_TO_SCREEN(player_location.x, float) - GLYPH_GAP,
                      .y = Y_TO_SCREEN(player_location.y, float) - GLYPH_GAP,
-                     .width = (GLYPH_WIDTH + (GLYPH_GAP * 2)) * SCALING_FACTOR,
-                     .height = (GLYPH_HEIGHT + (GLYPH_GAP * 2)) * SCALING_FACTOR,
+                     .width = (GLYPH_WIDTH + (GLYPH_GAP * 2)),
+                     .height = (GLYPH_HEIGHT + (GLYPH_GAP * 2)),
                    },
                    (Vector2) {0, 0},
                    0,
@@ -180,29 +160,31 @@ int main(void) {
                    (Rectangle) {
                      .x = X_TO_SCREEN(player_location.x, float),
                      .y = Y_TO_SCREEN(player_location.y, float),
-                     .width = GLYPH_WIDTH * SCALING_FACTOR,
-                     .height = GLYPH_HEIGHT * SCALING_FACTOR,
+                     .width = GLYPH_WIDTH,
+                     .height = GLYPH_HEIGHT,
                    },
                    (Vector2) {0, 0},
                    0,
                    BLACK);
 
-    Vector2 mouse_in_world = GetScreenToWorld2D(GetMousePosition(), camera);
+    Vector2 mouse_on_screen = GetScreenToWorld2D(GetMousePosition(), camera);
+
+    Point mouse_in_world = {
+      .x = (size_t)((mouse_on_screen.x) / (GLYPH_WIDTH + 1)),
+      .y = (size_t)((mouse_on_screen.y) / (GLYPH_HEIGHT + 1)),
+    };
 
     /* TODO: нужно зарендерить всё в текстуру, а потом рисовать курсор полностью в шейдере */
-    BeginShaderMode(cursor_shader);
 
     DrawRectanglePro((Rectangle) {
-        .x = mouse_in_world.x,
-        .y = mouse_in_world.y,
-        .width = GLYPH_WIDTH,
-        .height = GLYPH_HEIGHT,
+        .x = X_TO_SCREEN(mouse_in_world.x, float) - GLYPH_GAP,
+        .y = Y_TO_SCREEN(mouse_in_world.y, float) - GLYPH_GAP,
+        .width = GLYPH_WIDTH + (GLYPH_GAP * 2),
+        .height = GLYPH_HEIGHT + (GLYPH_GAP * 2),
       },
-      (Vector2) {GLYPH_WIDTH / 2.0f, GLYPH_HEIGHT / 2.0f},
+      (Vector2) {0, 0},
       0,
-      BLANK);
-
-    EndShaderMode();
+      WHITE);
 
     EndMode2D();
 
