@@ -4,14 +4,7 @@
 #include <unistd.h>
 #include <raylib.h>
 
-typedef Rectangle Room;
-
-typedef struct {
-  size_t x;
-  size_t y;
-} Vector2I;
-
-typedef Vector2I Point;
+#include "types.h"
 
 typedef struct {
   Rectangle rect;
