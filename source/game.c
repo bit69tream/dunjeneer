@@ -14,9 +14,12 @@
 #include "utils.h"
 #include "font.h"
 #include "player.h"
+#include "audio.h"
 
 int main(void) {
-  srand((unsigned int)time(0));
+  time_t seed = time(0);
+  srand((unsigned int)seed);
+  srand48(seed);
 
   static LevelMap map = {0};
 
@@ -29,10 +32,13 @@ int main(void) {
 
   /* TODO: https://www.squidi.net/three/entry.php?id=83 */
 
-  initialize_rendering();
+  init_rendering();
+  init_audio();
 
+  play_audio();
   while (!WindowShouldClose()) {
     process_player_movement(&player, map);
+    update_mouse();
 
     render(map, objects, objects_len, player);
   }

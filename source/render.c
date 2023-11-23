@@ -5,6 +5,7 @@
 #include <assert.h>
 
 #include <raylib.h>
+#include <raymath.h>
 
 #define X_TO_SCREEN(x, type) ((type)((x) * GLYPH_WIDTH) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
 #define Y_TO_SCREEN(x, type) ((type)((x) * GLYPH_HEIGHT) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
@@ -50,7 +51,7 @@ static const char *cursor_shader_source =
   "    }\n"
   "}\n";
 
-void initialize_rendering(void) {
+void init_rendering(void) {
   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
   /* TODO: adapt ui to the window size, tell user that window is too small when it is */
   /* TODO: calculate the minimal window size when the ui is ready */
@@ -58,6 +59,7 @@ void initialize_rendering(void) {
   SetExitKey(KEY_NULL);
 
   HideCursor();
+  DisableCursor();
 
   SetTargetFPS(60);
 
@@ -84,6 +86,7 @@ void initialize_rendering(void) {
 }
 
 void cleanup_rendering(void) {
+  EnableCursor();
   UnloadShader(cursor_shader);
   UnloadRenderTexture(world);
   UnloadTexture(font);
@@ -223,8 +226,15 @@ void render(LevelMap map,
   } EndDrawing();
 }
 
+static Vector2 mouse_position = {0};
+
+void update_mouse(void) {
+  mouse_position = Vector2Add(GetMouseDelta(), mouse_position);
+  mouse_position = Vector2Clamp(mouse_position, (Vector2) {0, 0}, (Vector2) {(float)GetScreenWidth(), (float)GetScreenHeight()});
+}
+
 Point mouse_in_world(void) {
-  Vector2 mouse_on_screen = GetScreenToWorld2D(GetMousePosition(), camera);
+  Vector2 mouse_on_screen = GetScreenToWorld2D(mouse_position, camera);
 
   return (Point) {
     .x = (size_t)((mouse_on_screen.x) / (GLYPH_WIDTH + 1)),

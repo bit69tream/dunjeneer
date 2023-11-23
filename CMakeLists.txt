@@ -30,7 +30,10 @@ add_executable(${PROJECT_NAME}
   source/game.c
   source/level_generator.c
   source/rand.c
-  source/font.c)
+  source/font.c
+  source/player.c
+  source/render.c
+  source/audio.c)
 set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 
