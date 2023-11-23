@@ -8,3 +8,5 @@ void render(LevelMap map,
             Player player);
 void initialize_rendering(void);
 void cleanup_rendering(void);
+
+Point mouse_in_world(void);

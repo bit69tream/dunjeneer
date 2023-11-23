@@ -195,16 +195,11 @@ void render(LevelMap map,
     ClearBackground(BLACK);
 
     BeginMode2D(camera); {
-      Vector2 mouse_on_screen = GetScreenToWorld2D(GetMousePosition(), camera);
-
-      Point mouse_in_world = {
-        .x = (size_t)((mouse_on_screen.x) / (GLYPH_WIDTH + 1)),
-        .y = (size_t)((mouse_on_screen.y) / (GLYPH_HEIGHT + 1)),
-      };
+      Point mouse = mouse_in_world();
 
       Vector4 mouse_cursor = {
-        .x = X_TO_SCREEN(mouse_in_world.x, float) - GLYPH_GAP,
-        .y = (Y_TO_SCREEN(mouse_in_world.y, float) - GLYPH_GAP),
+        .x = X_TO_SCREEN(mouse.x, float) - GLYPH_GAP,
+        .y = (Y_TO_SCREEN(mouse.y, float) - GLYPH_GAP),
         .z = GLYPH_WIDTH + (GLYPH_GAP * 2),
         .w = GLYPH_HEIGHT + (GLYPH_GAP * 2),
       };
@@ -226,4 +221,13 @@ void render(LevelMap map,
 
     } EndMode2D();
   } EndDrawing();
+}
+
+Point mouse_in_world(void) {
+  Vector2 mouse_on_screen = GetScreenToWorld2D(GetMousePosition(), camera);
+
+  return (Point) {
+    .x = (size_t)((mouse_on_screen.x) / (GLYPH_WIDTH + 1)),
+    .y = (size_t)((mouse_on_screen.y) / (GLYPH_HEIGHT + 1)),
+  };
 }
