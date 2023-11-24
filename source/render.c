@@ -20,6 +20,8 @@ static Shader cursor_shader;
 static int cursor_shader_resolution;
 static int cursor_shader_mouse_cursor;
 
+static Texture2D noise;
+
 static const char *cursor_shader_source =
   "#version 330\n\n"
 
@@ -83,6 +85,10 @@ void init_rendering(void) {
   SetShaderValue(cursor_shader, cursor_shader_resolution, &resolution, SHADER_UNIFORM_VEC2);
 
   cursor_shader_mouse_cursor = GetShaderLocation(cursor_shader, "mouse_cursor");
+
+  Image noise_img = GenImageWhiteNoise(world.texture.width, world.texture.height, 0.05f);
+  noise = LoadTextureFromImage(noise_img);
+  UnloadImage(noise_img);
 }
 
 void cleanup_rendering(void) {
@@ -133,18 +139,38 @@ void render(LevelMap map,
   BeginTextureMode(world); {
     ClearBackground(BLACK);
 
+    DrawTexture(noise, 0, 0, CLITERAL(Color){
+        .r = 70,
+        .g = 70,
+        .b = 70,
+        .a = 70,
+      });
+
     for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
       for (size_t x = 0; x < LEVEL_WIDTH; x++) {
         LevelTile tile = map[y][x];
 
+        if (tile == TILE_NONE) {
+          continue;
+        }
+
+        Rectangle position =  {
+          .x = X_TO_SCREEN(x, float),
+          .y = Y_TO_SCREEN(y, float),
+          .width = GLYPH_WIDTH,
+          .height = GLYPH_HEIGHT,
+        };
+
+        DrawRectangleRec((Rectangle) {
+            .x = position.x - 1,
+            .y = position.y - 1,
+            .width = position.width + 2,
+            .height = position.height + 2,
+          }, BLACK);
+
         DrawTexturePro(font,
                        glyphs[tile_to_glyph(tile)],
-                       (Rectangle) {
-                         .x = X_TO_SCREEN(x, float),
-                         .y = Y_TO_SCREEN(y, float),
-                         .width = GLYPH_WIDTH,
-                         .height = GLYPH_HEIGHT,
-                       },
+                       position,
                        (Vector2) {0, 0},
                        0,
                        tile_to_color(tile));
@@ -223,6 +249,8 @@ void render(LevelMap map,
       } EndShaderMode();
 
     } EndMode2D();
+
+    DrawFPS(0, 0);
   } EndDrawing();
 }
 

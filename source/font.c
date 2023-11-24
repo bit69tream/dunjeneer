@@ -124,7 +124,7 @@ size_t tile_to_glyph(LevelTile tile) {
   case TILE_WALL: return '#';
   case TILE_VERTICAL_CLOSED_DOOR: return '|';
   case TILE_HORIZONTAL_CLOSED_DOOR: return '-';
-  case TILE_FLOOR: return SPECIAL_GLYPH_CENTERED_DOT;
+  case TILE_FLOOR: return '.';
   case TILE_VERTICAL_OPENED_DOOR: return '_';
   case TILE_HORIZONTAL_OPENED_DOOR: return '|';
   case LEVEL_TILE_COUNT: assert(false && "bruh");
