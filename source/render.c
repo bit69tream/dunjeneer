@@ -20,7 +20,36 @@ static Shader cursor_shader;
 static int cursor_shader_resolution;
 static int cursor_shader_mouse_cursor;
 
-static Texture2D noise;
+static Shader noise_shader;
+static int noise_shader_time;
+static int noise_shader_resolution;
+
+static float shader_time;
+
+static const char *noise_shader_source =
+  "#version 330\n\n"
+
+  "in vec2 fragTexCoord;\n\n"
+
+  "uniform vec2 resolution;\n"
+  "uniform float time;\n"
+
+  "out vec4 finalColor;\n"
+
+  "float rand(vec2 co) {\n"
+  "    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);\n"
+  "}\n\n"
+
+  "void main() {\n"
+  "    vec2 pixelCoord = vec2(fragTexCoord.x * resolution.x, (1.0 - fragTexCoord.y) * resolution.y);\n"
+  "    float color = 1.0;\n"
+  "    if (rand(pixelCoord * time) < 0.9) {\n"
+  "        color = 0.0;\n"
+  "    }\n"
+  "    finalColor = vec4(vec3(color), 0.2);\n"
+  "}\n"
+  ;
+
 
 static const char *cursor_shader_source =
   "#version 330\n\n"
@@ -51,7 +80,8 @@ static const char *cursor_shader_source =
   "    } else { \n"
   "        finalColor = texelColor;\n"
   "    }\n"
-  "}\n";
+  "}\n"
+  ;
 
 void init_rendering(void) {
   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -86,9 +116,15 @@ void init_rendering(void) {
 
   cursor_shader_mouse_cursor = GetShaderLocation(cursor_shader, "mouse_cursor");
 
-  Image noise_img = GenImageWhiteNoise(world.texture.width, world.texture.height, 0.05f);
-  noise = LoadTextureFromImage(noise_img);
-  UnloadImage(noise_img);
+  noise_shader = LoadShaderFromMemory(NULL, noise_shader_source);
+  assert(IsShaderReady(noise_shader));
+
+  noise_shader_resolution = GetShaderLocation(noise_shader, "resolution");
+  SetShaderValue(noise_shader, noise_shader_resolution, &resolution, SHADER_UNIFORM_VEC2);
+
+  noise_shader_time = GetShaderLocation(noise_shader, "time");
+
+  shader_time = 0;
 }
 
 void cleanup_rendering(void) {
@@ -136,15 +172,22 @@ void render(LevelMap map,
   camera.offset.x = (float)GetScreenWidth() / 2.0f;
   camera.offset.y = (float)GetScreenHeight() / 2.0f;
 
-  BeginTextureMode(world); {
-    ClearBackground(BLACK);
+  int width = world.texture.width;
+  int height = world.texture.height;
 
-    DrawTexture(noise, 0, 0, CLITERAL(Color){
-        .r = 70,
-        .g = 70,
-        .b = 70,
-        .a = 70,
-      });
+  BeginTextureMode(world); {
+    /* ClearBackground(BLACK); */
+
+    SetShaderValue(noise_shader,
+                   noise_shader_time,
+                   &shader_time,
+                   SHADER_UNIFORM_FLOAT);
+
+    BeginShaderMode(noise_shader); {
+      DrawRectangle(0, 0,
+                    width, height,
+                    BLACK);
+    } EndShaderMode();
 
     for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
       for (size_t x = 0; x < LEVEL_WIDTH; x++) {
@@ -161,12 +204,14 @@ void render(LevelMap map,
           .height = GLYPH_HEIGHT,
         };
 
-        DrawRectangleRec((Rectangle) {
-            .x = position.x - 1,
-            .y = position.y - 1,
-            .width = position.width + 2,
-            .height = position.height + 2,
-          }, BLACK);
+        Rectangle bigger_position = {
+          .x = position.x - 1,
+          .y = position.y - 1,
+          .width = position.width + 2,
+          .height = position.height + 2,
+        };
+
+        DrawRectangleRec(bigger_position, BLACK);
 
         DrawTexturePro(font,
                        glyphs[tile_to_glyph(tile)],
@@ -252,6 +297,8 @@ void render(LevelMap map,
 
     DrawFPS(0, 0);
   } EndDrawing();
+
+  shader_time += GetFrameTime();
 }
 
 static Vector2 mouse_position = {0};
