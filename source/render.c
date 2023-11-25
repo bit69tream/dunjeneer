@@ -169,8 +169,12 @@ void render(LevelMap map,
   float actual_screen_width = (float)GetScreenWidth() / camera.zoom;
   float actual_screen_height = (float)GetScreenHeight() / camera.zoom;
 
-  float target_x = CLAMPF(actual_screen_width / 2, (float)world.texture.width - (actual_screen_width / 2), player_screen_x);
-  float target_y = CLAMPF(actual_screen_height / 2, (float)world.texture.height - (actual_screen_height / 2), player_screen_y);
+  float target_x = CLAMPF(actual_screen_width / 2,
+                          (float)world.texture.width - (actual_screen_width / 2),
+                          player_screen_x);
+  float target_y = CLAMPF(actual_screen_height / 2,
+                          (float)world.texture.height - (actual_screen_height / 2),
+                          player_screen_y);
 
   camera.target.x = LERP(camera.target.x, target_x, 0.1f);
   camera.target.y = LERP(camera.target.y, target_y, 0.1f);
