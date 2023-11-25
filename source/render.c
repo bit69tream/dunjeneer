@@ -299,6 +299,11 @@ void render(LevelMap map,
   } EndDrawing();
 
   shader_time += GetFrameTime();
+
+#define SHADER_TIME_LIMIT 10.0f
+  if (shader_time >= SHADER_TIME_LIMIT) {
+    shader_time -= SHADER_TIME_LIMIT;
+  }
 }
 
 static Vector2 mouse_position = {0};
