@@ -38,7 +38,10 @@ int main(void) {
   play_audio();
   while (!WindowShouldClose()) {
     process_player_movement(&player, map);
+
     update_mouse();
+
+    process_mouse(&player, &map);
 
     render(map, objects, objects_len, player);
   }

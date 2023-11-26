@@ -10,3 +10,4 @@ typedef struct {
 } Player;
 
 void process_player_movement(Player *player, LevelMap map);
+void process_mouse(Player *player, LevelMap *map);

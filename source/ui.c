@@ -320,7 +320,10 @@ static Vector2 mouse_position = {0};
 
 void update_mouse(void) {
   mouse_position = Vector2Add(GetMouseDelta(), mouse_position);
-  mouse_position = Vector2Clamp(mouse_position, (Vector2) {0, 0}, (Vector2) {(float)GetScreenWidth(), (float)GetScreenHeight()});
+  mouse_position = Vector2Clamp(mouse_position,
+                                (Vector2) {0, 0},
+                                (Vector2) {(float)GetScreenWidth(),
+                                           (float)GetScreenHeight()});
 }
 
 Point mouse_in_world(void) {

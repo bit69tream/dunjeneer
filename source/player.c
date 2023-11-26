@@ -1,5 +1,8 @@
 #include "player.h"
 #include "font.h"
+#include "level_generator.h"
+#include "raylib.h"
+#include "ui.h"
 #include "utils.h"
 
 void process_player_movement(Player *player, LevelMap map) {
@@ -87,4 +90,23 @@ void process_player_movement(Player *player, LevelMap map) {
 
   player->location.x = CLAMP(1, LEVEL_WIDTH - 2, player->location.x);
   player->location.y = CLAMP(1, LEVEL_HEIGHT - 2, player->location.y);
+}
+
+
+void process_mouse(Player *player, LevelMap *map) {
+  (void) player;
+
+  Point mouse_position = mouse_in_world();
+
+  if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+    LevelTile *tile = &(*map)[mouse_position.y][mouse_position.x];
+
+    switch (*tile) {
+    case TILE_HORIZONTAL_OPENED_DOOR: *tile = TILE_HORIZONTAL_CLOSED_DOOR; break;
+    case TILE_HORIZONTAL_CLOSED_DOOR: *tile = TILE_HORIZONTAL_OPENED_DOOR; break;
+    case TILE_VERTICAL_OPENED_DOOR: *tile = TILE_VERTICAL_CLOSED_DOOR; break;
+    case TILE_VERTICAL_CLOSED_DOOR: *tile = TILE_VERTICAL_OPENED_DOOR; break;
+    default: break;
+    }
+  }
 }
