@@ -3,7 +3,6 @@
 #include "utils.h"
 
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 bool generate_leafs(Leaf *leafs, size_t *leafs_len, size_t leaf_index) {
@@ -222,10 +221,6 @@ bool do_vertical_lines_intersect(Point start_a, Point end_a,
   assert(start_a.x == end_a.x);
   assert(start_b.x == end_b.x);
 
-  if (start_a.x == 35 && start_a.y == 51) {
-    printf("!!!!\n");
-  }
-
   if (start_a.x != start_b.x) {
     return false;
   }
@@ -397,10 +392,6 @@ void put_horizontal_path(LevelMap *output_map,
     x_start = tmp;
   }
 
-  if (x_start > x_end) {
-    printf("bruuuh\n");
-  }
-
   for (size_t xi = x_start; xi <= x_end; xi++) {
     if ((*output_map)[y][xi] == TILE_WALL && roll_dice(2)) {
       (*output_map)[y][xi] = TILE_VERTICAL_CLOSED_DOOR;
@@ -418,10 +409,6 @@ void put_vertical_path(LevelMap *output_map,
     size_t tmp = y_end;
     y_end = y_start;
     y_start = tmp;
-  }
-
-  if (y_start > y_end) {
-    printf("aaah\n");
   }
 
   for (size_t yi = y_start; yi <= y_end; yi++) {

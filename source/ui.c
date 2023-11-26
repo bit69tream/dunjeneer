@@ -1,6 +1,9 @@
+#define UI_STATE
+
 #include "ui.h"
 #include "font.h"
 #include "level_generator.h"
+#include "player.h"
 #include "utils.h"
 #include <assert.h>
 
@@ -83,6 +86,21 @@ static const char *cursor_shader_source =
   "}\n"
   ;
 
+UIState ui_state;
+
+Vector2I action_menu_offsets[ACTION_COUNT] = {
+  [ACTION_NONE] = {0, 0},
+
+  [ACTION_OPEN] = {-1, -1},
+  [ACTION_CLOSE] = {-0, -1},
+  [ACTION_KICK] = {1, -1},
+
+  [ACTION_PICK_UP] = {-1, 1},
+  [ACTION_EAT] = {0, 1},
+  [ACTION_CLIMB] = {1, 1},
+};
+static_assert(SIZE_OF(action_menu_offsets) == ACTION_COUNT);
+
 void init_rendering(void) {
   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
   /* TODO: adapt ui to the window size, tell user that window is too small when it is */
@@ -125,6 +143,8 @@ void init_rendering(void) {
   noise_shader_time = GetShaderLocation(noise_shader, "time");
 
   shader_time = 0;
+
+  ui_state.type = UI_STATE_NONE;
 }
 
 void cleanup_rendering(void) {
@@ -160,6 +180,147 @@ Color object_type_to_color(LevelObjectType type) {
   assert(false && "unknown object type");
 }
 
+void render_noise(int width, int height) {
+  SetShaderValue(noise_shader,
+                 noise_shader_time,
+                 &shader_time,
+                 SHADER_UNIFORM_FLOAT);
+
+  BeginShaderMode(noise_shader); {
+    DrawRectangle(0, 0,
+                  width, height,
+                  BLACK);
+  } EndShaderMode();
+}
+
+void render_map(LevelMap map) {
+  for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
+    for (size_t x = 0; x < LEVEL_WIDTH; x++) {
+      LevelTile tile = map[y][x];
+
+      if (tile == TILE_NONE) {
+        continue;
+      }
+
+      Rectangle position =  {
+        .x = X_TO_SCREEN(x, float),
+        .y = Y_TO_SCREEN(y, float),
+        .width = GLYPH_WIDTH,
+        .height = GLYPH_HEIGHT,
+      };
+
+      Rectangle bigger_position = {
+        .x = position.x - GLYPH_GAP,
+        .y = position.y - GLYPH_GAP,
+        .width = position.width + (2 * GLYPH_GAP),
+        .height = position.height + (2 * GLYPH_GAP),
+      };
+
+      DrawRectangleRec(bigger_position, BLACK);
+
+      DrawTexturePro(font,
+                     glyphs[tile_to_glyph(tile)],
+                     position,
+                     (Vector2) {0, 0},
+                     0,
+                     tile_to_color(tile));
+    }
+  }
+}
+
+void render_objects(LevelObject objects[OBJECTS_MAX], size_t objects_len) {
+  for (size_t i = 0; i < objects_len; i++) {
+    DrawRectangle(X_TO_SCREEN(objects[i].location.x, int),
+                  Y_TO_SCREEN(objects[i].location.y, int),
+                  GLYPH_WIDTH,
+                  GLYPH_HEIGHT,
+                  BLACK);
+
+    DrawTexturePro(font,
+                   glyphs[object_type_to_glyph(objects[i].type)],
+                   (Rectangle) {
+                     .x = X_TO_SCREEN(objects[i].location.x, float),
+                     .y = Y_TO_SCREEN(objects[i].location.y, float),
+                     .width = GLYPH_WIDTH,
+                     .height = GLYPH_HEIGHT,
+                   },
+                   (Vector2) {0, 0},
+                   0,
+                   object_type_to_color(objects[i].type));
+  }
+}
+
+void render_player(Player player) {
+    DrawRectanglePro((Rectangle) {
+        .x = (X_TO_SCREEN(player.location.x, float) - GLYPH_GAP) + (float)player.location_offset.x,
+        .y = (Y_TO_SCREEN(player.location.y, float) - GLYPH_GAP) + (float)player.location_offset.y,
+        .width = (GLYPH_WIDTH + (GLYPH_GAP * 2)),
+        .height = (GLYPH_HEIGHT + (GLYPH_GAP * 2)),
+      },
+      (Vector2) {0, 0},
+      0,
+      GREEN);
+
+    DrawTexturePro(font,
+                   glyphs['@'],
+                   (Rectangle) {
+                     .x = X_TO_SCREEN(player.location.x, float) + (float)player.location_offset.x,
+                     .y = Y_TO_SCREEN(player.location.y, float) + (float)player.location_offset.y,
+                     .width = GLYPH_WIDTH,
+                     .height = GLYPH_HEIGHT,
+                   },
+                   (Vector2) {0, 0},
+                   0,
+                   BLACK);
+}
+
+void render_action_menu(void) {
+  static float alpha = 0.0f;
+  float desired_alpha = 1.0f;
+
+  if (ui_state.type == UI_STATE_ACTION_MENU) {
+    desired_alpha = 1.0f;
+  } else {
+    desired_alpha = 0.0f;
+  }
+
+  alpha = LERP(alpha, desired_alpha, 0.2f);
+
+  for (size_t i = 0; i < SIZE_OF(action_menu_offsets); i++) {
+    if (i == ACTION_NONE) {
+      continue;
+    }
+
+    Point position = {
+      .x = (size_t)((ssize_t)ui_state.action_tile_location.x + action_menu_offsets[i].x),
+      .y = (size_t)((ssize_t)ui_state.action_tile_location.y + action_menu_offsets[i].y),
+    };
+
+    DrawRectanglePro(
+      (Rectangle) {
+        .x = X_TO_SCREEN(position.x, float) - GLYPH_GAP,
+        .y = Y_TO_SCREEN(position.y, float) - GLYPH_GAP,
+        .width = GLYPH_WIDTH + (2 * GLYPH_GAP),
+        .height = GLYPH_HEIGHT + (2 * GLYPH_GAP),
+      },
+      (Vector2) {0, 0},
+      0,
+      CLITERAL(Color) {0, 0, 0, (unsigned char)(255 * alpha)});
+
+    DrawTexturePro(font,
+                   glyphs[action_to_glyph((Action)(i))],
+                   (Rectangle) {
+                     .x = X_TO_SCREEN(position.x, float),
+                     .y = Y_TO_SCREEN(position.y, float),
+                     .width = GLYPH_WIDTH,
+                     .height = GLYPH_HEIGHT,
+                   },
+                   (Vector2) {0, 0},
+                   0,
+                   CLITERAL(Color) {0, 121, 241, (unsigned char)(255 * alpha)});
+  }
+}
+
 void render(LevelMap map,
             LevelObject objects[OBJECTS_MAX], size_t objects_len,
             Player player) {
@@ -182,97 +343,16 @@ void render(LevelMap map,
   camera.offset.x = (float)GetScreenWidth() / 2.0f;
   camera.offset.y = (float)GetScreenHeight() / 2.0f;
 
-  int width = world.texture.width;
-  int height = world.texture.height;
+  int texture_width = world.texture.width;
+  int texture_height = world.texture.height;
 
   BeginTextureMode(world); {
-    /* ClearBackground(BLACK); */
+    render_noise(texture_width, texture_height);
+    render_map(map);
+    render_objects(objects, objects_len);
+    render_player(player);
 
-    SetShaderValue(noise_shader,
-                   noise_shader_time,
-                   &shader_time,
-                   SHADER_UNIFORM_FLOAT);
-
-    BeginShaderMode(noise_shader); {
-      DrawRectangle(0, 0,
-                    width, height,
-                    BLACK);
-    } EndShaderMode();
-
-    for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
-      for (size_t x = 0; x < LEVEL_WIDTH; x++) {
-        LevelTile tile = map[y][x];
-
-        if (tile == TILE_NONE) {
-          continue;
-        }
-
-        Rectangle position =  {
-          .x = X_TO_SCREEN(x, float),
-          .y = Y_TO_SCREEN(y, float),
-          .width = GLYPH_WIDTH,
-          .height = GLYPH_HEIGHT,
-        };
-
-        Rectangle bigger_position = {
-          .x = position.x - 1,
-          .y = position.y - 1,
-          .width = position.width + 2,
-          .height = position.height + 2,
-        };
-
-        DrawRectangleRec(bigger_position, BLACK);
-
-        DrawTexturePro(font,
-                       glyphs[tile_to_glyph(tile)],
-                       position,
-                       (Vector2) {0, 0},
-                       0,
-                       tile_to_color(tile));
-      }
-    }
-
-    for (size_t i = 0; i < objects_len; i++) {
-      DrawRectangle(X_TO_SCREEN(objects[i].location.x, int),
-                    Y_TO_SCREEN(objects[i].location.y, int),
-                    GLYPH_WIDTH,
-                    GLYPH_HEIGHT,
-                    BLACK);
-
-      DrawTexturePro(font,
-                     glyphs[object_type_to_glyph(objects[i].type)],
-                     (Rectangle) {
-                       .x = X_TO_SCREEN(objects[i].location.x, float),
-                       .y = Y_TO_SCREEN(objects[i].location.y, float),
-                       .width = GLYPH_WIDTH,
-                       .height = GLYPH_HEIGHT,
-                     },
-                     (Vector2) {0, 0},
-                     0,
-                     object_type_to_color(objects[i].type));
-    }
-
-    DrawRectanglePro((Rectangle) {
-        .x = (X_TO_SCREEN(player.location.x, float) - GLYPH_GAP) + (float)player.location_offset.x,
-        .y = (Y_TO_SCREEN(player.location.y, float) - GLYPH_GAP) + (float)player.location_offset.y,
-        .width = (GLYPH_WIDTH + (GLYPH_GAP * 2)),
-        .height = (GLYPH_HEIGHT + (GLYPH_GAP * 2)),
-      },
-      (Vector2) {0, 0},
-      0,
-      GREEN);
-
-    DrawTexturePro(font,
-                   glyphs['@'],
-                   (Rectangle) {
-                     .x = X_TO_SCREEN(player.location.x, float) + (float)player.location_offset.x,
-                     .y = Y_TO_SCREEN(player.location.y, float) + (float)player.location_offset.y,
-                     .width = GLYPH_WIDTH,
-                     .height = GLYPH_HEIGHT,
-                   },
-                   (Vector2) {0, 0},
-                   0,
-                   BLACK);
+    render_action_menu();
   } EndTextureMode();
 
   BeginDrawing(); {
@@ -283,7 +363,7 @@ void render(LevelMap map,
 
       Vector4 mouse_cursor = {
         .x = X_TO_SCREEN(mouse.x, float) - GLYPH_GAP,
-        .y = (Y_TO_SCREEN(mouse.y, float) - GLYPH_GAP),
+        .y = Y_TO_SCREEN(mouse.y, float) - GLYPH_GAP,
         .z = GLYPH_WIDTH + (GLYPH_GAP * 2),
         .w = GLYPH_HEIGHT + (GLYPH_GAP * 2),
       };
