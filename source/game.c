@@ -10,7 +10,7 @@
 
 #include "rand.h"
 #include "level_generator.h"
-#include "render.h"
+#include "ui.h"
 #include "utils.h"
 #include "font.h"
 #include "player.h"

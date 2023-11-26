@@ -32,7 +32,7 @@ add_executable(${PROJECT_NAME}
   source/rand.c
   source/font.c
   source/player.c
-  source/render.c
+  source/ui.c
   source/audio.c)
 set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
