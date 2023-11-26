@@ -93,83 +93,22 @@ void process_player_movement(Player *player, LevelMap map) {
   player->location.y = CLAMP(1, LEVEL_HEIGHT - 2, player->location.y);
 }
 
-bool cannot_interact(Player *player, Point tile_location) {
+bool can_interact(Player *player, Point tile_location, LevelTile tile) {
   (void) player;
   (void) tile_location;
 
-  return false;
-}
-
-bool can_interact(Player *player, Point tile_location) {
-  (void) player;
-  (void) tile_location;
+  switch (tile) {
+  case TILE_NONE:
+  case TILE_FLOOR:
+  case TILE_WALL:
+    return false;
+  case LEVEL_TILE_COUNT:
+    assert(false && "bug");
+  default: return true;
+  }
 
   return true;
 }
-
-#include <stdio.h>
-
-void action_crash(LevelMap *map, Point tile_location, Action action) {
-  (void) map;
-  (void) tile_location;
-  (void) action;
-
-  printf("tile location = (%lu %lu); action = %d\n", tile_location.x, tile_location.y, action);
-  assert(false && "forbidden action");
-}
-
-void action_close(LevelMap *map, Point tile_location, Action action) {
-  (void) map;
-  (void) tile_location;
-  (void) action;
-
-  printf("closed\n");
-}
-
-void action_open(LevelMap *map, Point tile_location, Action action) {
-  (void) map;
-  (void) tile_location;
-  (void) action;
-
-  printf("opened\n");
-}
-
-struct {
-  void (*apply_action)(LevelMap *map, Point tile_location, Action action);
-  bool (*predicate)(Player *player, Point tile_location);
-} interaction_table[] = {
-  [TILE_NONE] = {
-    .apply_action = action_crash,
-    .predicate = cannot_interact,
-  },
-  [TILE_FLOOR] = {
-    .apply_action = action_crash,
-    .predicate = cannot_interact,
-  },
-  [TILE_WALL] = {
-    .apply_action = action_crash,
-    .predicate = cannot_interact,
-  },
-
-  [TILE_VERTICAL_CLOSED_DOOR] = {
-    .apply_action = action_close,
-    .predicate = can_interact,
-  },
-  [TILE_VERTICAL_OPENED_DOOR] = {
-    .apply_action = action_close,
-    .predicate = can_interact,
-  },
-
-  [TILE_HORIZONTAL_CLOSED_DOOR] = {
-    .apply_action = action_open,
-    .predicate = can_interact,
-  },
-  [TILE_HORIZONTAL_OPENED_DOOR] = {
-    .apply_action = action_open,
-    .predicate = can_interact,
-  },
-};
-static_assert(SIZE_OF(interaction_table) == LEVEL_TILE_COUNT);
 
 Action get_action_from_menu(void) {
   Point mouse_position = mouse_in_world();
@@ -182,11 +121,50 @@ Action get_action_from_menu(void) {
 
     if (mouse_position.x == position.x &&
         mouse_position.y == position.y) {
-      return (Action)(i + 1);
+      return (Action)i;
     }
   }
 
   return ACTION_NONE;
+}
+
+#define TILE_FROM_LOCATION(map, location) ((map)[(location).y][(location.x)])
+
+void action_open(Player *player, LevelMap *map, Point location) {
+  (void) player;
+
+  LevelTile *tile = &TILE_FROM_LOCATION(*map, location);
+
+  switch (*tile) {
+  case TILE_HORIZONTAL_CLOSED_DOOR: *tile = TILE_HORIZONTAL_OPENED_DOOR; break;
+  case TILE_VERTICAL_CLOSED_DOOR: *tile = TILE_VERTICAL_OPENED_DOOR; break;
+  default: return;
+  }
+}
+
+void action_close(Player *player, LevelMap *map, Point location) {
+  (void) player;
+
+  LevelTile *tile = &TILE_FROM_LOCATION(*map, location);
+
+  switch (*tile) {
+  case TILE_HORIZONTAL_OPENED_DOOR: *tile = TILE_HORIZONTAL_CLOSED_DOOR; break;
+  case TILE_VERTICAL_OPENED_DOOR: *tile = TILE_VERTICAL_CLOSED_DOOR; break;
+  default: return;
+  }
+}
+
+void apply_action(Player *player, LevelMap *map, Point location, Action action) {
+  switch (action) {
+  case ACTION_NONE: assert(false && "cannot apply ACTION_NONE");
+  case ACTION_OPEN: action_open(player, map, location); return;
+  case ACTION_CLOSE: action_close(player, map, location); return;
+  case ACTION_KICK: assert(false && "TODO");
+  case ACTION_PICK_UP: assert(false && "TODO");
+  case ACTION_EAT: assert(false && "TODO");
+  case ACTION_CLIMB: assert(false && "TODO");
+  case ACTION_COUNT: assert(false && "( ._.)");
+  }
 }
 
 void process_mouse(Player *player, LevelMap *map) {
@@ -199,7 +177,7 @@ void process_mouse(Player *player, LevelMap *map) {
 
     LevelTile tile = (*map)[mouse_position.y][mouse_position.x];
 
-    if (!interaction_table[tile].predicate(player, mouse_position)) {
+    if (!can_interact(player, mouse_position, tile)) {
       /* TODO: play some sound */
       return;
     }
@@ -211,16 +189,12 @@ void process_mouse(Player *player, LevelMap *map) {
   }
 
   if (IsMouseButtonReleased(MOUSE_BUTTON_RIGHT) && ui_state.type == UI_STATE_ACTION_MENU) {
-    LevelTile tile = (*map)[ui_state.action_tile_location.y][ui_state.action_tile_location.x];
-
     Action action = get_action_from_menu();
     assert(action >= ACTION_NONE && action < ACTION_COUNT);
 
     if (action != ACTION_NONE) {
       /* TODO: play some sound */
-      interaction_table[tile].apply_action(map,
-                                           ui_state.action_tile_location,
-                                           action);
+      apply_action(player, map, ui_state.action_tile_location, action);
     }
 
     ui_state.type = UI_STATE_NONE;
