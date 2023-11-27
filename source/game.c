@@ -35,10 +35,42 @@ int main(void) {
   init_audio();
 
   play_audio();
-  while (!WindowShouldClose()) {
-    process_player_movement(&player, map);
 
-    update_mouse();
+  bool is_cursor_enabled = false;
+  while (!WindowShouldClose()) {
+    if (!is_window_big_enough()) {
+      if (!is_cursor_enabled) {
+        EnableCursor();
+        is_cursor_enabled = true;
+      }
+
+      BeginDrawing(); {
+        ClearBackground(BLACK);
+
+        render_text_centered("window is too small",
+                             (Vector2) {
+                               .x = (float)(GetScreenWidth()) / 2.0f,
+                               .y = (float)(GetScreenHeight()) / 2.0f,
+                             },
+                             WHITE,
+                             4);
+
+      } EndDrawing();
+      continue;
+    }
+
+    if (is_cursor_enabled &&
+        (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) ||
+         IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))) {
+      DisableCursor();
+      is_cursor_enabled = false;
+    }
+
+    if (!is_cursor_enabled) {
+      update_mouse();
+    }
+
+    process_player_movement(&player, map);
 
     process_mouse(&player, &map);
 

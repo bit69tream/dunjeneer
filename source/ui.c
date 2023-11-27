@@ -1,3 +1,4 @@
+#include <stddef.h>
 #define UI_STATE
 
 #include "ui.h"
@@ -6,6 +7,7 @@
 #include "player.h"
 #include "utils.h"
 #include <assert.h>
+#include <string.h>
 
 #include <raylib.h>
 #include <raymath.h>
@@ -413,4 +415,39 @@ Point mouse_in_world(void) {
     .x = (size_t)((mouse_on_screen.x) / (GLYPH_WIDTH + 1)),
     .y = (size_t)((mouse_on_screen.y) / (GLYPH_HEIGHT + 1)),
   };
+}
+
+
+#define MINIMAL_WINDOW_WIDTH 700
+#define MINIMAL_WINDOW_HEIGHT 500
+bool is_window_big_enough() {
+  return
+    (GetScreenWidth() >= MINIMAL_WINDOW_WIDTH) &&
+    (GetScreenHeight() >= MINIMAL_WINDOW_HEIGHT);
+}
+
+void render_text_centered(const char *text, Vector2 position, Color color, float zoom) {
+  size_t text_len = strlen(text);
+  float text_width = (float)((text_len * GLYPH_WIDTH) + ((text_len - 1) * GLYPH_GAP)) * zoom;
+
+  Vector2 actual_position = {
+    .x = position.x - (text_width / 2.0f),
+    .y = position.y - (GLYPH_HEIGHT / 2.0f),
+  };
+
+  for (size_t i = 0; i < text_len; i++) {
+    DrawTexturePro(font,
+                   glyphs[(size_t)text[i]],
+                   (Rectangle) {
+                     .x = actual_position.x,
+                     .y = actual_position.y,
+                     .width = GLYPH_WIDTH * zoom,
+                     .height = GLYPH_HEIGHT * zoom,
+                   },
+                   (Vector2) {0, 0},
+                   0,
+                   color);
+
+    actual_position.x += (GLYPH_WIDTH + GLYPH_GAP) * zoom;
+  }
 }
