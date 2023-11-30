@@ -400,8 +400,15 @@ void render(LevelMap map,
 
 static Vector2 mouse_position = {0};
 
+#define MOUSE_SENSITIVITY 1.5
+
 void update_mouse(void) {
-  mouse_position = Vector2Add(GetMouseDelta(), mouse_position);
+  mouse_position = Vector2Add(Vector2Multiply(GetMouseDelta(),
+                                              (Vector2) {
+                                                .x = MOUSE_SENSITIVITY,
+                                                .y = MOUSE_SENSITIVITY,
+                                              }),
+                              mouse_position);
   mouse_position = Vector2Clamp(mouse_position,
                                 (Vector2) {0, 0},
                                 (Vector2) {(float)GetScreenWidth(),
