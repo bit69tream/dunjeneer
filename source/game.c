@@ -26,6 +26,7 @@ int main(void) {
   size_t objects_len = 0;
 
   Player player = {0};
+  init_player(&player);
 
   generate_level(&map, objects, &objects_len, &player.location);
 

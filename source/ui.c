@@ -261,7 +261,7 @@ void render_player(Player player) {
       },
       (Vector2) {0, 0},
       0,
-      GREEN);
+      health_to_color(player));
 
     DrawTexturePro(font,
                    glyphs['@'],

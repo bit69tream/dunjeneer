@@ -3,10 +3,15 @@
 #include "types.h"
 #include "level_generator.h"
 
+#include <raylib.h>
+
 typedef struct {
   Point location;
   Vector2I location_offset;
   Direction direction;
+
+  size_t max_health;
+  size_t health;
 } Player;
 
 typedef enum {
@@ -22,3 +27,7 @@ typedef enum {
 
 void process_player_movement(Player *player, LevelMap map);
 void process_mouse(Player *player, LevelMap *map);
+
+Color health_to_color(Player player);
+
+void init_player(Player *player);

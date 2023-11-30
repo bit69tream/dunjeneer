@@ -2,6 +2,7 @@
 #include "font.h"
 #include "level_generator.h"
 #include "raylib.h"
+#include "types.h"
 #include "ui.h"
 #include "utils.h"
 #include <assert.h>
@@ -199,4 +200,28 @@ void process_mouse(Player *player, LevelMap *map) {
 
     ui_state.type = UI_STATE_NONE;
   }
+}
+
+Color health_to_color(Player player) {
+  float health_percentage = (float)player.health / (float)player.max_health;
+
+  if (health_percentage == 1.0) {
+    return GREEN;
+  } else if (health_percentage >= 0.2) {
+    return ORANGE;
+  } else {
+    return RED;
+  }
+}
+
+void init_player(Player *player) {
+  player->location = (Point){0};
+  player->location_offset = (Vector2I){0};
+  player->direction = DIRECTION_NONE;
+
+  #define PLAYER_INITIAL_MAX_HEALTH 50
+
+  player->health =
+    player->max_health =
+    PLAYER_INITIAL_MAX_HEALTH;
 }
