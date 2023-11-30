@@ -161,10 +161,14 @@ Color tile_to_color(LevelTile tile) {
   case TILE_NONE: return BLANK;
   case TILE_WALL: return WHITE;
   case TILE_FLOOR: return DARKGRAY;
-  case TILE_VERTICAL_CLOSED_DOOR: return BROWN;
-  case TILE_HORIZONTAL_CLOSED_DOOR: return BROWN;
-  case TILE_VERTICAL_OPENED_DOOR: return BROWN;
+
+  case TILE_VERTICAL_CLOSED_DOOR:
+  case TILE_HORIZONTAL_CLOSED_DOOR:
+  case TILE_VERTICAL_LOCKED_DOOR:
+  case TILE_HORIZONTAL_LOCKED_DOOR:
+  case TILE_VERTICAL_OPENED_DOOR:
   case TILE_HORIZONTAL_OPENED_DOOR: return BROWN;
+
   case LEVEL_TILE_COUNT: assert(false && "nuh uh");
   };
 

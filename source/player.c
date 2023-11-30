@@ -1,6 +1,7 @@
 #include "player.h"
 #include "font.h"
 #include "level_generator.h"
+#include "rand.h"
 #include "raylib.h"
 #include "types.h"
 #include "ui.h"
@@ -155,12 +156,32 @@ void action_close(Player *player, LevelMap *map, Point location) {
   }
 }
 
+void action_kick(Player *player, LevelMap *map, Point location) {
+  (void) player;
+
+  LevelTile *tile = &TILE_FROM_LOCATION(*map, location);
+
+  switch (*tile) {
+  case TILE_HORIZONTAL_CLOSED_DOOR:
+  case TILE_VERTICAL_CLOSED_DOOR:
+  case TILE_HORIZONTAL_LOCKED_DOOR:
+  case TILE_VERTICAL_LOCKED_DOOR:
+  case TILE_HORIZONTAL_OPENED_DOOR:
+  case TILE_VERTICAL_OPENED_DOOR: {
+    if (roll_dice(3)) {
+       *tile = TILE_FLOOR;
+    }
+  } break;
+  default: break;               /* TODO: game need some way to show messages to player */
+  }
+}
+
 void apply_action(Player *player, LevelMap *map, Point location, Action action) {
   switch (action) {
   case ACTION_NONE: assert(false && "cannot apply ACTION_NONE");
   case ACTION_OPEN: action_open(player, map, location); return;
   case ACTION_CLOSE: action_close(player, map, location); return;
-  case ACTION_KICK: assert(false && "TODO");
+  case ACTION_KICK: action_kick(player, map, location); return;
   case ACTION_PICK_UP: assert(false && "TODO");
   case ACTION_EAT: assert(false && "TODO");
   case ACTION_CLIMB: assert(false && "TODO");

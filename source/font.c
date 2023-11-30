@@ -123,7 +123,9 @@ size_t tile_to_glyph(LevelTile tile) {
   switch (tile) {
   case TILE_NONE: return ' ';
   case TILE_WALL: return '#';
+  case TILE_VERTICAL_LOCKED_DOOR:
   case TILE_VERTICAL_CLOSED_DOOR: return '|';
+  case TILE_HORIZONTAL_LOCKED_DOOR:
   case TILE_HORIZONTAL_CLOSED_DOOR: return '-';
   case TILE_FLOOR: return '.';
   case TILE_VERTICAL_OPENED_DOOR: return '_';
