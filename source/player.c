@@ -6,10 +6,12 @@
 #include "types.h"
 #include "ui.h"
 #include "utils.h"
+#include "config.h"
+
 #include <assert.h>
 
 void process_player_movement(Player *player, LevelMap map) {
-  if (IsKeyDown(KEY_E)) {
+  if (is_action_key_down(KEYBIND_ACTION_MOVE_UP)) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_LEFT ||
          player->direction == DIRECTION_RIGHT) &&
@@ -22,7 +24,7 @@ void process_player_movement(Player *player, LevelMap map) {
     }
   }
 
-  if (IsKeyDown(KEY_S)) {
+  if (is_action_key_down(KEYBIND_ACTION_MOVE_LEFT)) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_DOWN ||
          player->direction == DIRECTION_UP) &&
@@ -35,7 +37,7 @@ void process_player_movement(Player *player, LevelMap map) {
     }
   }
 
-  if (IsKeyDown(KEY_D)) {
+  if (is_action_key_down(KEYBIND_ACTION_MOVE_DOWN)) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_LEFT ||
          player->direction == DIRECTION_RIGHT) &&
@@ -48,7 +50,7 @@ void process_player_movement(Player *player, LevelMap map) {
     }
   }
 
-  if (IsKeyDown(KEY_F)) {
+  if (is_action_key_down(KEYBIND_ACTION_MOVE_RIGHT)) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_UP ||
          player->direction == DIRECTION_DOWN) &&
@@ -168,6 +170,7 @@ void action_kick(Player *player, LevelMap *map, Point location) {
   case TILE_VERTICAL_LOCKED_DOOR:
   case TILE_HORIZONTAL_OPENED_DOOR:
   case TILE_VERTICAL_OPENED_DOOR: {
+    /* TODO: keep track of how damaged a tile is and decide stuff based on that */
     if (roll_dice(3)) {
        *tile = TILE_FLOOR;
     }
@@ -192,7 +195,7 @@ void apply_action(Player *player, LevelMap *map, Point location, Action action) 
 void process_mouse(Player *player, LevelMap *map) {
   (void) player;
 
-  if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+  if (is_action_key_pressed(KEYBIND_ACTION_ACTION_MENU)) {
     assert(ui_state.type == UI_STATE_NONE);
 
     Point mouse_position = mouse_in_world();
@@ -210,7 +213,7 @@ void process_mouse(Player *player, LevelMap *map) {
     assert(ui_state.type == UI_STATE_ACTION_MENU);
   }
 
-  if (IsMouseButtonReleased(MOUSE_BUTTON_RIGHT) && ui_state.type == UI_STATE_ACTION_MENU) {
+  if (is_action_key_released(KEYBIND_ACTION_ACTION_MENU) && ui_state.type == UI_STATE_ACTION_MENU) {
     Action action = get_action_from_menu();
     assert(action >= ACTION_NONE && action < ACTION_COUNT);
 

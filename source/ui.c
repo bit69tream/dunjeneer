@@ -6,6 +6,8 @@
 #include "level_generator.h"
 #include "player.h"
 #include "utils.h"
+#include "config.h"
+
 #include <assert.h>
 #include <string.h>
 
@@ -404,13 +406,11 @@ void render(LevelMap map,
 
 static Vector2 mouse_position = {0};
 
-#define MOUSE_SENSITIVITY 1.5
-
-void update_mouse(void) {
+void update_mouse() {
   mouse_position = Vector2Add(Vector2Multiply(GetMouseDelta(),
                                               (Vector2) {
-                                                .x = MOUSE_SENSITIVITY,
-                                                .y = MOUSE_SENSITIVITY,
+                                                .x = config.mouse_sensitivity,
+                                                .y = config.mouse_sensitivity,
                                               }),
                               mouse_position);
   mouse_position = Vector2Clamp(mouse_position,

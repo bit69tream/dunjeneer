@@ -2,6 +2,7 @@
 
 #include "player.h"
 #include "level_generator.h"
+#include "config.h"
 
 typedef enum {
   UI_STATE_NONE,
@@ -25,7 +26,7 @@ void init_rendering(void);
 void cleanup_rendering(void);
 
 Point mouse_in_world(void);
-void update_mouse(void);
+void update_mouse();
 
 void setup_action_menu(Point anchor);
 

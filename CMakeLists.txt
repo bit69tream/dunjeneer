@@ -33,7 +33,8 @@ add_executable(${PROJECT_NAME}
   source/font.c
   source/player.c
   source/ui.c
-  source/audio.c)
+  source/audio.c
+  source/config.c)
 set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 

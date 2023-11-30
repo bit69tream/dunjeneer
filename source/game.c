@@ -14,11 +14,16 @@
 #include "font.h"
 #include "player.h"
 #include "audio.h"
+#include "config.h"
 
 int main(void) {
   time_t seed = time(0);
   srand((unsigned int)seed);
   srand48(seed);
+
+  if (!try_load_config()) {
+    default_config();
+  }
 
   static LevelMap map = {0};
 
