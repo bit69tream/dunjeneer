@@ -10,6 +10,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <math.h>
 
 Vector2I player_interactable_offsets[MAX_PLATER_INTERACTABLE_OFFSETS];
 size_t player_interactable_offsets_len;
@@ -199,6 +200,8 @@ void apply_action(Player *player, LevelMap *map, Point location, Action action) 
 void process_mouse(Player *player, LevelMap *map) {
   (void) player;
 
+  /* TODO: allow to interact with objects only inside the FOV */
+
   if (is_action_key_pressed(KEYBIND_ACTION_ACTION_MENU)) {
     assert(ui_state.type == UI_STATE_NONE);
 
@@ -250,61 +253,70 @@ Color health_to_color(Player player) {
     });
 }
 
-#define RADIUS (PLAYER_VIEW_RADIUS * MAX(GLYPH_HEIGHT, GLYPH_WIDTH))
-#define TEMP_FRAMEBUFFER_SIZE ((RADIUS * 2))
-void calculate_interactable_offsets(void) {
-  static bool temp_buffer[TEMP_FRAMEBUFFER_SIZE * TEMP_FRAMEBUFFER_SIZE];
-  memset(temp_buffer, false, sizeof(temp_buffer));
+/* using midpoint ellipse algorithm */
+void generate_fov_outline(float radius_x, float radius_y,
+                          ssize_t center_x, ssize_t center_y) {
 
-  int center = TEMP_FRAMEBUFFER_SIZE / 2;
+  float x = 0;
+  float y = radius_y;
 
-  for (int yi = center - RADIUS; yi < (center + RADIUS); yi++) {
-    if (yi < 0 || yi >= TEMP_FRAMEBUFFER_SIZE) continue;
+  float d1 = (radius_y * radius_y) - (radius_x * radius_x * radius_y) + (0.25f * radius_x * radius_x);
+  float dx = 2 * radius_y * radius_y * x;
+  float dy = 2 * radius_x * radius_x * y;
 
-    for (int xi = center - RADIUS; xi < (center + RADIUS); xi++) {
-      if (xi < 0 || xi >= TEMP_FRAMEBUFFER_SIZE) continue;
+#define ADD_NEW_POINT(xx, yy)                             \
+  do {                                                    \
+    size_t new_point = 0;                                 \
+    PUSH(player_interactable_offsets,                     \
+         &player_interactable_offsets_len,                \
+         MAX_PLATER_INTERACTABLE_OFFSETS,                 \
+         &new_point);                                     \
+                                                          \
+    player_interactable_offsets[new_point] = (Vector2I) { \
+      .x = (xx),                                          \
+      .y = (yy),                                          \
+    };                                                    \
+  } while(0)
 
-      float x = (float)(xi - center) + 0.5f;
-      float y = (float)(yi - center) + 0.5f;
-      float r = (float)RADIUS;
+  while (dx < dy) {
+    ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(y) + center_y);
+    ADD_NEW_POINT((ssize_t)(-x) + center_x, (ssize_t)(y) + center_y);
+    ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(-y) + center_y);
+    ADD_NEW_POINT((ssize_t)(-x) + center_x, (ssize_t)(-y) + center_y);
 
-      if (((x * x) + (y * y)) <= (r * r)) {
-        temp_buffer[(TEMP_FRAMEBUFFER_SIZE * yi) + xi] = true;
-      }
+    if (d1 < 0) {
+      x++;
+      dx = dx + (2 * radius_y * radius_y);
+      d1 = d1 + dx + (radius_y * radius_y);
+    }
+    else {
+      x++;
+      y--;
+      dx = dx + (2 * radius_y * radius_y);
+      dy = dy - (2 * radius_x * radius_x);
+      d1 = d1 + dx - dy + (radius_y * radius_y);
     }
   }
 
-  int centerX = TEMP_FRAMEBUFFER_SIZE / GLYPH_WIDTH / 2;
-  int centerY = TEMP_FRAMEBUFFER_SIZE / GLYPH_HEIGHT / 2;
+  float d2 = ((radius_y * radius_y) * ((x + 0.5f) * (x + 0.5f))) + ((radius_x * radius_x) * ((y - 1) * (y - 1))) - (radius_x * radius_x * radius_y * radius_y);
 
-  for (int yi = 0; yi < (TEMP_FRAMEBUFFER_SIZE / GLYPH_HEIGHT); yi++) {
-    int y = yi * GLYPH_HEIGHT;
-    for (int xi = 0; xi < (TEMP_FRAMEBUFFER_SIZE / GLYPH_WIDTH); xi++) {
-      int x = xi * GLYPH_WIDTH;
+  while (y >= 0) {
+    ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(y) + center_y);
+    ADD_NEW_POINT((ssize_t)(-x) + center_x, (ssize_t)(y) + center_y);
+    ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(-y) + center_y);
+    ADD_NEW_POINT((ssize_t)(-x) + center_x, (ssize_t)(-y) + center_y);
 
-      int pixel_counter = 0;
-
-      for (int i = 0; i < GLYPH_HEIGHT; i++) {
-        for (int j = 0; j < GLYPH_WIDTH; j++) {
-          if (temp_buffer[((TEMP_FRAMEBUFFER_SIZE * y) + i) + (x + j)]) {
-            pixel_counter++;
-          }
-        }
-      }
-
-#define FILLED_THRESHOLD 2
-      if (pixel_counter > FILLED_THRESHOLD) {
-        size_t new_offset = 0;
-        PUSH(player_interactable_offsets,
-             &player_interactable_offsets_len,
-             MAX_PLATER_INTERACTABLE_OFFSETS,
-             &new_offset);
-
-        player_interactable_offsets[new_offset] = (Vector2I) {
-          .x = (xi- centerX),
-          .y = (yi - centerY),
-        };
-      }
+    if (d2 > 0) {
+      y--;
+      dy = dy - (2 * radius_x * radius_x);
+      d2 = d2 + (radius_x * radius_x) - dy;
+    }
+    else {
+      y--;
+      x++;
+      dx = dx + (2 * radius_y * radius_y);
+      dy = dy - (2 * radius_x * radius_x);
+      d2 = d2 + dx - dy + (radius_x * radius_x);
     }
   }
 }
@@ -320,5 +332,7 @@ void init_player(Player *player) {
     player->max_health =
     PLAYER_INITIAL_MAX_HEALTH;
 
-  calculate_interactable_offsets();
+  generate_fov_outline(floorf(PLAYER_VIEW_RADIUS * ((float)GLYPH_HEIGHT / (float)GLYPH_WIDTH)),
+                       PLAYER_VIEW_RADIUS,
+                       0, 0);
 }
