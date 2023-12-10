@@ -23,20 +23,29 @@ void noise_callback(void *buffer, unsigned int frames) {
   }
 }
 
-static AudioStream stream;
+#if DISABLE_NOISE != 1
+static AudioStream noise_stream;
+#endif
 
 void init_audio(void) {
   InitAudioDevice();
 
-  stream = LoadAudioStream(44100, 16, 1);
-  SetAudioStreamCallback(stream, noise_callback);
+#if DISABLE_NOISE != 1
+  noise_stream = LoadAudioStream(44100, 16, 1);
+  SetAudioStreamCallback(noise_stream, noise_callback);
+#endif
 }
 
 void play_audio(void) {
-  PlayAudioStream(stream);
+#if DISABLE_NOISE != 1
+  PlayAudioStream(noise_stream);
+#endif
 }
 
 void cleanup_audio(void) {
-  UnloadAudioStream(stream);
+#if DISABLE_NOISE != 1
+  UnloadAudioStream(noise_stream);
+#endif
+
   CloseAudioDevice();
 }
