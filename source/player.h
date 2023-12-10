@@ -3,7 +3,9 @@
 #include "types.h"
 #include "level_generator.h"
 
+#include <assert.h>
 #include <raylib.h>
+#include <stddef.h>
 
 typedef struct {
   Point location;
@@ -24,6 +26,13 @@ typedef enum {
   ACTION_CLIMB,
   ACTION_COUNT,
 } Action;
+
+#define PLAYER_VIEW_RADIUS 9
+static_assert(PLAYER_VIEW_RADIUS % 2 == 1);
+
+#define MAX_PLATER_INTERACTABLE_OFFSETS 512
+extern Vector2I player_interactable_offsets[MAX_PLATER_INTERACTABLE_OFFSETS];
+extern size_t player_interactable_offsets_len;
 
 void process_player_movement(Player *player, LevelMap map);
 void process_mouse(Player *player, LevelMap *map);

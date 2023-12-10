@@ -201,38 +201,44 @@ void render_noise(int width, int height) {
   } EndShaderMode();
 }
 
-void render_map(LevelMap map) {
-  for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
-    for (size_t x = 0; x < LEVEL_WIDTH; x++) {
-      LevelTile tile = map[y][x];
+void render_map(LevelMap map, Player player) {
+  for (size_t i = 0; i < player_interactable_offsets_len; i++) {
+    ssize_t y = ((ssize_t)player.location.y + player_interactable_offsets[i].y);
+    ssize_t x = ((ssize_t)player.location.x + player_interactable_offsets[i].x);
 
-      if (tile == TILE_NONE) {
-        continue;
-      }
-
-      Rectangle position =  {
-        .x = X_TO_SCREEN(x, float),
-        .y = Y_TO_SCREEN(y, float),
-        .width = GLYPH_WIDTH,
-        .height = GLYPH_HEIGHT,
-      };
-
-      Rectangle bigger_position = {
-        .x = position.x - GLYPH_GAP,
-        .y = position.y - GLYPH_GAP,
-        .width = position.width + (2 * GLYPH_GAP),
-        .height = position.height + (2 * GLYPH_GAP),
-      };
-
-      DrawRectangleRec(bigger_position, BLACK);
-
-      DrawTexturePro(font,
-                     glyphs[tile_to_glyph(tile)],
-                     position,
-                     (Vector2) {0, 0},
-                     0,
-                     tile_to_color(tile));
+    if ((y < 0 || y >= LEVEL_HEIGHT) ||
+        (x < 0 || x >= LEVEL_WIDTH)) {
+      continue;
     }
+
+    LevelTile tile = map[y][x];
+
+    if (tile == TILE_NONE) {
+      continue;
+    }
+
+    Rectangle position =  {
+      .x = X_TO_SCREEN(x, float),
+      .y = Y_TO_SCREEN(y, float),
+      .width = GLYPH_WIDTH,
+      .height = GLYPH_HEIGHT,
+    };
+
+    Rectangle bigger_position = {
+      .x = position.x - GLYPH_GAP,
+      .y = position.y - GLYPH_GAP,
+      .width = position.width + (2 * GLYPH_GAP),
+      .height = position.height + (2 * GLYPH_GAP),
+    };
+
+    DrawRectangleRec(bigger_position, BLACK);
+
+    DrawTexturePro(font,
+                   glyphs[tile_to_glyph(tile)],
+                   position,
+                   (Vector2) {0, 0},
+                   0,
+                   tile_to_color(tile));
   }
 }
 
@@ -356,7 +362,7 @@ void render(LevelMap map,
 
   BeginTextureMode(world); {
     render_noise(texture_width, texture_height);
-    render_map(map);
+    render_map(map, player);
     render_objects(objects, objects_len);
     render_player(player);
 

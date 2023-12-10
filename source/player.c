@@ -9,6 +9,10 @@
 #include "config.h"
 
 #include <assert.h>
+#include <string.h>
+
+Vector2I player_interactable_offsets[MAX_PLATER_INTERACTABLE_OFFSETS];
+size_t player_interactable_offsets_len;
 
 void process_player_movement(Player *player, LevelMap map) {
   if (is_action_key_down(KEYBIND_ACTION_MOVE_UP)) {
@@ -229,12 +233,80 @@ void process_mouse(Player *player, LevelMap *map) {
 Color health_to_color(Player player) {
   float health_percentage = (float)player.health / (float)player.max_health;
 
-  if (health_percentage == 1.0) {
-    return GREEN;
-  } else if (health_percentage >= 0.2) {
-    return ORANGE;
-  } else {
-    return RED;
+  Color dead = CLITERAL(Color) {
+    .r = 214,
+    .g = 19,
+    .b = 48,
+    .a = 255,
+  };
+  Color alive = GREEN;
+
+  return
+    (CLITERAL(Color) {
+      .r = (unsigned char)LERP((float)dead.r, (float)alive.r, health_percentage),
+      .g = (unsigned char)LERP((float)dead.g, (float)alive.g, health_percentage),
+      .b = (unsigned char)LERP((float)dead.b, (float)alive.b, health_percentage),
+      .a = 255,
+    });
+}
+
+#define RADIUS (PLAYER_VIEW_RADIUS * MAX(GLYPH_HEIGHT, GLYPH_WIDTH))
+#define TEMP_FRAMEBUFFER_SIZE ((RADIUS * 2))
+void calculate_interactable_offsets(void) {
+  static bool temp_buffer[TEMP_FRAMEBUFFER_SIZE * TEMP_FRAMEBUFFER_SIZE];
+  memset(temp_buffer, false, sizeof(temp_buffer));
+
+  int center = TEMP_FRAMEBUFFER_SIZE / 2;
+
+  for (int yi = center - RADIUS; yi < (center + RADIUS); yi++) {
+    if (yi < 0 || yi >= TEMP_FRAMEBUFFER_SIZE) continue;
+
+    for (int xi = center - RADIUS; xi < (center + RADIUS); xi++) {
+      if (xi < 0 || xi >= TEMP_FRAMEBUFFER_SIZE) continue;
+
+      float x = (float)(xi - center) + 0.5f;
+      float y = (float)(yi - center) + 0.5f;
+      float r = (float)RADIUS;
+
+      if (((x * x) + (y * y)) <= (r * r)) {
+        temp_buffer[(TEMP_FRAMEBUFFER_SIZE * yi) + xi] = true;
+      }
+    }
+  }
+
+  int centerX = TEMP_FRAMEBUFFER_SIZE / GLYPH_WIDTH / 2;
+  int centerY = TEMP_FRAMEBUFFER_SIZE / GLYPH_HEIGHT / 2;
+
+  for (int yi = 0; yi < (TEMP_FRAMEBUFFER_SIZE / GLYPH_HEIGHT); yi++) {
+    int y = yi * GLYPH_HEIGHT;
+    for (int xi = 0; xi < (TEMP_FRAMEBUFFER_SIZE / GLYPH_WIDTH); xi++) {
+      int x = xi * GLYPH_WIDTH;
+
+      int pixel_counter = 0;
+
+      for (int i = 0; i < GLYPH_HEIGHT; i++) {
+        for (int j = 0; j < GLYPH_WIDTH; j++) {
+          if (temp_buffer[((TEMP_FRAMEBUFFER_SIZE * y) + i) + (x + j)]) {
+            pixel_counter++;
+          }
+        }
+      }
+
+      const float filled_threshold = 0.9f;
+#define MAX_PIXELS_FILLED (GLYPH_HEIGHT * GLYPH_WIDTH)
+      if (((float)pixel_counter / MAX_PIXELS_FILLED) >= filled_threshold) {
+        size_t new_offset = 0;
+        PUSH(player_interactable_offsets,
+             &player_interactable_offsets_len,
+             MAX_PLATER_INTERACTABLE_OFFSETS,
+             &new_offset);
+
+        player_interactable_offsets[new_offset] = (Vector2I) {
+          .x = (xi- centerX),
+          .y = (yi - centerY),
+        };
+      }
+    }
   }
 }
 
@@ -248,4 +320,6 @@ void init_player(Player *player) {
   player->health =
     player->max_health =
     PLAYER_INITIAL_MAX_HEALTH;
+
+  calculate_interactable_offsets();
 }
