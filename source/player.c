@@ -292,9 +292,8 @@ void calculate_interactable_offsets(void) {
         }
       }
 
-      const float filled_threshold = 0.9f;
-#define MAX_PIXELS_FILLED (GLYPH_HEIGHT * GLYPH_WIDTH)
-      if (((float)pixel_counter / MAX_PIXELS_FILLED) >= filled_threshold) {
+#define FILLED_THRESHOLD 2
+      if (pixel_counter > FILLED_THRESHOLD) {
         size_t new_offset = 0;
         PUSH(player_interactable_offsets,
              &player_interactable_offsets_len,
