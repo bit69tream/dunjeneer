@@ -27,12 +27,10 @@ typedef enum {
   ACTION_COUNT,
 } Action;
 
-#define PLAYER_VIEW_RADIUS 9
-static_assert(PLAYER_VIEW_RADIUS % 2 == 1);
+#define PLAYER_MAX_VIEW_DISTANCE 69
 
-#define MAX_PLATER_INTERACTABLE_OFFSETS 1024
-extern Vector2I player_interactable_offsets[MAX_PLATER_INTERACTABLE_OFFSETS];
-extern size_t player_interactable_offsets_len;
+typedef bool LevelMapVisibleMask[LEVEL_HEIGHT][LEVEL_WIDTH];
+extern LevelMapVisibleMask level_mask;
 
 void process_player_movement(Player *player, LevelMap map);
 void process_mouse(Player *player, LevelMap *map);

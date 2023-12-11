@@ -14,9 +14,7 @@
 #include <string.h>
 #include <math.h>
 
-Vector2I player_interactable_offsets[MAX_PLATER_INTERACTABLE_OFFSETS] = {0};
-size_t player_interactable_offsets_len = 0;
-size_t player_interactable_offsets_borders_end = 0;
+LevelMapVisibleMask level_mask;
 
 void process_player_movement(Player *player, LevelMap map) {
   if (is_action_key_down(KEYBIND_ACTION_MOVE_UP)) {
@@ -256,156 +254,88 @@ Color health_to_color(Player player) {
     });
 }
 
-#define ADD_NEW_POINT(xx, yy)                             \
-  do {                                                    \
-    size_t new_point = 0;                                 \
-    PUSH(player_interactable_offsets,                     \
-         &player_interactable_offsets_len,                \
-         MAX_PLATER_INTERACTABLE_OFFSETS,                 \
-         &new_point);                                     \
-                                                          \
-    player_interactable_offsets[new_point] = (Vector2I) { \
-      .x = (xx),                                          \
-      .y = (yy),                                          \
-    };                                                    \
-  } while(0)
+void trace_ray(Vector2 from, Vector2 to,
+               LevelMap map) {
+  Vector2 dir = Vector2Normalize(Vector2Subtract(to, from));
 
-/* using midpoint ellipse algorithm */
-void generate_fov_outline(float radius_x, float radius_y,
-                          ssize_t center_x, ssize_t center_y) {
+  Vector2 unit_step_size = (Vector2) {
+    .x = sqrtf(1 + powf(dir.y / dir.x, 2)),
+    .y = sqrtf(1 + powf(dir.x / dir.y, 2)),
+  };
 
-  float x = 0;
-  float y = radius_y;
+  Vector2I check = (Vector2I) {
+    .x = (ssize_t) from.x,
+    .y = (ssize_t) from.y,
+  };
+  Vector2 ray_length = (Vector2) {0, 0};
+  Vector2I step = (Vector2I) {0, 0};
 
-  float rx2 = radius_x * radius_x;
-  float ry2 = radius_y * radius_y;
-
-  float d1 = ry2 - (rx2 * radius_y) + (0.25f * rx2);
-  float dx = 2 * ry2 * x;
-  float dy = 2 * rx2 * y;
-
-  while (dx < dy) {
-    ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(y) + center_y);
-    ADD_NEW_POINT((ssize_t)(-x) + center_x, (ssize_t)(y) + center_y);
-    ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(-y) + center_y);
-    ADD_NEW_POINT((ssize_t)(-x) + center_x, (ssize_t)(-y) + center_y);
-
-    x++;
-    if (d1 < 0) {
-      dx = dx + (2 * ry2);
-      d1 = d1 + dx + ry2;
-    } else {
-      y--;
-      dx = dx + (2 * ry2);
-      dy = dy - (2 * rx2);
-      d1 = d1 + dx - dy + ry2;
-    }
+  if (dir.x < 0) {
+    step.x = -1;
+    ray_length.x = (from.x - (float)(check.x)) * unit_step_size.x;
+  } else {
+    step.x = 1;
+    ray_length.x = ((float)(check.x + 1) - from.x) * unit_step_size.x;
   }
 
-  float d2 = (ry2 * ((x + 0.5f) * (x + 0.5f))) + (rx2 * ((y - 1) * (y - 1))) - (rx2 * ry2);
-
-  while (y >= 0) {
-    ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(y) + center_y);
-    ADD_NEW_POINT((ssize_t)(-x) + center_x, (ssize_t)(y) + center_y);
-    ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(-y) + center_y);
-    ADD_NEW_POINT((ssize_t)(-x) + center_x, (ssize_t)(-y) + center_y);
-
-    y--;
-    if (d2 > 0) {
-      dy = dy - (2 * rx2);
-      d2 = d2 + rx2 - dy;
-    } else {
-      x++;
-      dx = dx + (2 * ry2);
-      dy = dy - (2 * rx2);
-      d2 = d2 + dx - dy + rx2;
-    }
+  if (dir.y < 0) {
+    step.y = -1;
+    ray_length.y = (from.y - (float)(check.y)) * unit_step_size.y;
+  } else {
+    step.y = 1;
+    ray_length.y = ((float)(check.y + 1) - from.y) * unit_step_size.y;
   }
 
-  player_interactable_offsets_borders_end = player_interactable_offsets_len;
+  float distance = 0;
+  while (distance < PLAYER_MAX_VIEW_DISTANCE) {
+    if (ray_length.x < ray_length.y) {
+      check.x += step.x;
+      distance = ray_length.x;
+      ray_length.x += unit_step_size.x;
+    } else {
+      check.y += step.y;
+      distance = ray_length.y;
+      ray_length.y += unit_step_size.y;
+    }
+
+    if ((check.x < 0 || check.x >= LEVEL_WIDTH) ||
+        (check.y < 0 || check.y >= LEVEL_HEIGHT)) {
+      break;
+    }
+
+    LevelTile tile = map[check.y][check.x];
+
+    level_mask[check.y][check.x] = true;
+
+    /* TODO: make lists of see-through and solid tiles */
+    if (tile == TILE_WALL ||
+        tile == TILE_HORIZONTAL_CLOSED_DOOR ||
+        tile == TILE_HORIZONTAL_LOCKED_DOOR ||
+        tile == TILE_VERTICAL_LOCKED_DOOR ||
+        tile == TILE_VERTICAL_CLOSED_DOOR) {
+      break;
+    }
+  }
 }
 
 void trace_rays_for_fov(Player player,
                         LevelMap map) {
-  player_interactable_offsets_len = player_interactable_offsets_borders_end;
+  memset(level_mask, 0, sizeof(level_mask));
 
-  for (size_t i = 0; i < player_interactable_offsets_borders_end; i++) {
-    Vector2 from = (Vector2) {
-      .x = (float)player.location.x + 0.5f,
-      .y = (float)player.location.y + 0.5f,
-    };
+  Vector2 from = (Vector2) {
+    .x = (float)player.location.x + 0.5f,
+    .y = (float)player.location.y + 0.5f,
+  };
+
+  for (ssize_t i = -25; i < 25; i++) {
     Vector2 to = (Vector2) {
-      .x = from.x + (float)player_interactable_offsets[i].x,
-      .y = from.y + (float)player_interactable_offsets[i].y,
+      .x = from.x - (float)(i),
+      .y = from.y - (float)(i),
     };
 
-    Vector2 dir = Vector2Normalize(Vector2Subtract(to, from));
-
-    Vector2 unit_step_size = (Vector2) {
-      .x = sqrtf(1 + powf(dir.y / dir.x, 2)),
-      .y = sqrtf(1 + powf(dir.x / dir.y, 2)),
-    };
-
-    Vector2I check = (Vector2I) {
-      .x = (ssize_t) from.x,
-      .y = (ssize_t) from.y,
-    };
-    Vector2 ray_length = (Vector2) {0, 0};
-    Vector2I step = (Vector2I) {0, 0};
-
-    if (dir.x < 0) {
-      step.x = -1;
-      ray_length.x = (from.x - (float)(check.x)) * unit_step_size.x;
-    } else {
-      step.x = 1;
-      ray_length.x = ((float)(check.x + 1) - from.x) * unit_step_size.x;
-    }
-
-    if (dir.y < 0) {
-      step.y = -1;
-      ray_length.y = (from.y - (float)(check.y)) * unit_step_size.y;
-    } else {
-      step.y = 1;
-      ray_length.y = ((float)(check.y + 1) - from.y) * unit_step_size.y;
-    }
-
-    bool found_something = false;
-    float distance = 0;
-#define MAX_DISTANCE PLAYER_VIEW_RADIUS
-    while (!found_something &&
-           distance < MAX_DISTANCE) {
-      if (ray_length.x < ray_length.y) {
-        check.x += step.x;
-        distance = ray_length.x;
-        ray_length.x += unit_step_size.x;
-      } else {
-        check.y += step.y;
-        distance = ray_length.y;
-        ray_length.y += unit_step_size.y;
-      }
-
-      if ((check.x < 0 || check.x >= LEVEL_WIDTH) ||
-          (check.y < 0 || check.y >= LEVEL_HEIGHT)) {
-        break;
-      }
-
-      LevelTile tile = map[check.y][check.x];
-
-      ADD_NEW_POINT(check.x - (ssize_t)player.location.x,
-                    check.y - (ssize_t)player.location.y);
-
-      /* TODO: make lists of see-through and solid tiles */
-      if (tile == TILE_WALL ||
-          tile == TILE_HORIZONTAL_CLOSED_DOOR ||
-          tile == TILE_HORIZONTAL_LOCKED_DOOR ||
-          tile == TILE_VERTICAL_LOCKED_DOOR ||
-          tile == TILE_VERTICAL_CLOSED_DOOR) {
-        found_something = true;
-      }
-    }
+    trace_ray(from, to, map);
   }
 }
-#undef ADD_NEW_POINT
 
 void init_player(Player *player) {
   player->location = (Point){0};
@@ -417,8 +347,4 @@ void init_player(Player *player) {
   player->health =
     player->max_health =
     PLAYER_INITIAL_MAX_HEALTH;
-
-  generate_fov_outline(floorf(PLAYER_VIEW_RADIUS * ((float)GLYPH_HEIGHT / (float)GLYPH_WIDTH)),
-                       PLAYER_VIEW_RADIUS,
-                       0, 0);
 }
