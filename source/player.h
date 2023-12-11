@@ -27,7 +27,7 @@ typedef enum {
   ACTION_COUNT,
 } Action;
 
-#define PLAYER_MAX_VIEW_DISTANCE 69
+#define PLAYER_MAX_VIEW_DISTANCE 20
 
 typedef bool LevelMapVisibleMask[LEVEL_HEIGHT][LEVEL_WIDTH];
 extern LevelMapVisibleMask level_mask;
