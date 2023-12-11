@@ -242,6 +242,8 @@ void render_map(LevelMap map) {
 
 void render_objects(LevelObject objects[OBJECTS_MAX], size_t objects_len) {
   for (size_t i = 0; i < objects_len; i++) {
+    if (!level_mask[objects[i].location.y][objects[i].location.x]) continue;
+
     DrawRectangle(X_TO_SCREEN(objects[i].location.x, int),
                   Y_TO_SCREEN(objects[i].location.y, int),
                   GLYPH_WIDTH,
