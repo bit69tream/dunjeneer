@@ -30,7 +30,7 @@ typedef enum {
 #define PLAYER_VIEW_RADIUS 9
 static_assert(PLAYER_VIEW_RADIUS % 2 == 1);
 
-#define MAX_PLATER_INTERACTABLE_OFFSETS 512
+#define MAX_PLATER_INTERACTABLE_OFFSETS 1024
 extern Vector2I player_interactable_offsets[MAX_PLATER_INTERACTABLE_OFFSETS];
 extern size_t player_interactable_offsets_len;
 
@@ -40,3 +40,6 @@ void process_mouse(Player *player, LevelMap *map);
 Color health_to_color(Player player);
 
 void init_player(Player *player);
+
+void trace_rays_for_fov(Player player,
+                        LevelMap map);

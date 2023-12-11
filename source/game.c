@@ -80,6 +80,8 @@ int main(void) {
 
     process_mouse(&player, &map);
 
+    trace_rays_for_fov(player, map);
+
     render(map, objects, objects_len, player);
   }
 

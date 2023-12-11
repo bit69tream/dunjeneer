@@ -3,17 +3,20 @@
 #include "level_generator.h"
 #include "rand.h"
 #include "raylib.h"
+#include "raymath.h"
 #include "types.h"
 #include "ui.h"
 #include "utils.h"
 #include "config.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 
-Vector2I player_interactable_offsets[MAX_PLATER_INTERACTABLE_OFFSETS];
-size_t player_interactable_offsets_len;
+Vector2I player_interactable_offsets[MAX_PLATER_INTERACTABLE_OFFSETS] = {0};
+size_t player_interactable_offsets_len = 0;
+size_t player_interactable_offsets_borders_end = 0;
 
 void process_player_movement(Player *player, LevelMap map) {
   if (is_action_key_down(KEYBIND_ACTION_MOVE_UP)) {
@@ -253,20 +256,6 @@ Color health_to_color(Player player) {
     });
 }
 
-/* using midpoint ellipse algorithm */
-void generate_fov_outline(float radius_x, float radius_y,
-                          ssize_t center_x, ssize_t center_y) {
-
-  float x = 0;
-  float y = radius_y;
-
-  float rx2 = radius_x * radius_x;
-  float ry2 = radius_y * radius_y;
-
-  float d1 = ry2 - (rx2 * radius_y) + (0.25f * rx2);
-  float dx = 2 * ry2 * x;
-  float dy = 2 * rx2 * y;
-
 #define ADD_NEW_POINT(xx, yy)                             \
   do {                                                    \
     size_t new_point = 0;                                 \
@@ -280,6 +269,20 @@ void generate_fov_outline(float radius_x, float radius_y,
       .y = (yy),                                          \
     };                                                    \
   } while(0)
+
+/* using midpoint ellipse algorithm */
+void generate_fov_outline(float radius_x, float radius_y,
+                          ssize_t center_x, ssize_t center_y) {
+
+  float x = 0;
+  float y = radius_y;
+
+  float rx2 = radius_x * radius_x;
+  float ry2 = radius_y * radius_y;
+
+  float d1 = ry2 - (rx2 * radius_y) + (0.25f * rx2);
+  float dx = 2 * ry2 * x;
+  float dy = 2 * rx2 * y;
 
   while (dx < dy) {
     ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(y) + center_y);
@@ -318,8 +321,91 @@ void generate_fov_outline(float radius_x, float radius_y,
       d2 = d2 + dx - dy + rx2;
     }
   }
-#undef ADD_NEW_POINT
+
+  player_interactable_offsets_borders_end = player_interactable_offsets_len;
 }
+
+void trace_rays_for_fov(Player player,
+                        LevelMap map) {
+  player_interactable_offsets_len = player_interactable_offsets_borders_end;
+
+  for (size_t i = 0; i < player_interactable_offsets_borders_end; i++) {
+    Vector2 from = (Vector2) {
+      .x = (float)player.location.x + 0.5f,
+      .y = (float)player.location.y + 0.5f,
+    };
+    Vector2 to = (Vector2) {
+      .x = from.x + (float)player_interactable_offsets[i].x,
+      .y = from.y + (float)player_interactable_offsets[i].y,
+    };
+
+    Vector2 dir = Vector2Normalize(Vector2Subtract(to, from));
+
+    Vector2 unit_step_size = (Vector2) {
+      .x = sqrtf(1 + powf(dir.y / dir.x, 2)),
+      .y = sqrtf(1 + powf(dir.x / dir.y, 2)),
+    };
+
+    Vector2I check = (Vector2I) {
+      .x = (ssize_t) from.x,
+      .y = (ssize_t) from.y,
+    };
+    Vector2 ray_length = (Vector2) {0, 0};
+    Vector2I step = (Vector2I) {0, 0};
+
+    if (dir.x < 0) {
+      step.x = -1;
+      ray_length.x = (from.x - (float)(check.x)) * unit_step_size.x;
+    } else {
+      step.x = 1;
+      ray_length.x = ((float)(check.x + 1) - from.x) * unit_step_size.x;
+    }
+
+    if (dir.y < 0) {
+      step.y = -1;
+      ray_length.y = (from.y - (float)(check.y)) * unit_step_size.y;
+    } else {
+      step.y = 1;
+      ray_length.y = ((float)(check.y + 1) - from.y) * unit_step_size.y;
+    }
+
+    bool found_something = false;
+    float distance = 0;
+#define MAX_DISTANCE PLAYER_VIEW_RADIUS
+    while (!found_something &&
+           distance < MAX_DISTANCE) {
+      if (ray_length.x < ray_length.y) {
+        check.x += step.x;
+        distance = ray_length.x;
+        ray_length.x += unit_step_size.x;
+      } else {
+        check.y += step.y;
+        distance = ray_length.y;
+        ray_length.y += unit_step_size.y;
+      }
+
+      if ((check.x < 0 || check.x >= LEVEL_WIDTH) ||
+          (check.y < 0 || check.y >= LEVEL_HEIGHT)) {
+        break;
+      }
+
+      LevelTile tile = map[check.y][check.x];
+
+      ADD_NEW_POINT(check.x - (ssize_t)player.location.x,
+                    check.y - (ssize_t)player.location.y);
+
+      /* TODO: make lists of see-through and solid tiles */
+      if (tile == TILE_WALL ||
+          tile == TILE_HORIZONTAL_CLOSED_DOOR ||
+          tile == TILE_HORIZONTAL_LOCKED_DOOR ||
+          tile == TILE_VERTICAL_LOCKED_DOOR ||
+          tile == TILE_VERTICAL_CLOSED_DOOR) {
+        found_something = true;
+      }
+    }
+  }
+}
+#undef ADD_NEW_POINT
 
 void init_player(Player *player) {
   player->location = (Point){0};
