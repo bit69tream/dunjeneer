@@ -312,7 +312,8 @@ void trace_ray(Vector2 from, Vector2 to,
         tile == TILE_HORIZONTAL_CLOSED_DOOR ||
         tile == TILE_HORIZONTAL_LOCKED_DOOR ||
         tile == TILE_VERTICAL_LOCKED_DOOR ||
-        tile == TILE_VERTICAL_CLOSED_DOOR) {
+        tile == TILE_VERTICAL_CLOSED_DOOR ||
+        tile == TILE_NONE) {
       break;
     }
   }
@@ -327,13 +328,15 @@ void trace_rays_for_fov(Player player,
     .y = (float)player.location.y + 0.5f,
   };
 
-  for (ssize_t i = -25; i < 25; i++) {
-    Vector2 to = (Vector2) {
-      .x = from.x - (float)(i),
-      .y = from.y - (float)(i),
-    };
+  for (ssize_t yi = -25; yi < 25; yi++) {
+    for (ssize_t xi = -25; xi < 25; xi++) {
+      Vector2 to = (Vector2) {
+        .x = from.x - (float)(xi),
+        .y = from.y - (float)(yi),
+      };
 
-    trace_ray(from, to, map);
+      trace_ray(from, to, map);
+    }
   }
 }
 
