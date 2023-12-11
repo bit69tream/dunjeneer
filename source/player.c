@@ -260,9 +260,12 @@ void generate_fov_outline(float radius_x, float radius_y,
   float x = 0;
   float y = radius_y;
 
-  float d1 = (radius_y * radius_y) - (radius_x * radius_x * radius_y) + (0.25f * radius_x * radius_x);
-  float dx = 2 * radius_y * radius_y * x;
-  float dy = 2 * radius_x * radius_x * y;
+  float rx2 = radius_x * radius_x;
+  float ry2 = radius_y * radius_y;
+
+  float d1 = ry2 - (rx2 * radius_y) + (0.25f * rx2);
+  float dx = 2 * ry2 * x;
+  float dy = 2 * rx2 * y;
 
 #define ADD_NEW_POINT(xx, yy)                             \
   do {                                                    \
@@ -284,21 +287,19 @@ void generate_fov_outline(float radius_x, float radius_y,
     ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(-y) + center_y);
     ADD_NEW_POINT((ssize_t)(-x) + center_x, (ssize_t)(-y) + center_y);
 
+    x++;
     if (d1 < 0) {
-      x++;
-      dx = dx + (2 * radius_y * radius_y);
-      d1 = d1 + dx + (radius_y * radius_y);
-    }
-    else {
-      x++;
+      dx = dx + (2 * ry2);
+      d1 = d1 + dx + ry2;
+    } else {
       y--;
-      dx = dx + (2 * radius_y * radius_y);
-      dy = dy - (2 * radius_x * radius_x);
-      d1 = d1 + dx - dy + (radius_y * radius_y);
+      dx = dx + (2 * ry2);
+      dy = dy - (2 * rx2);
+      d1 = d1 + dx - dy + ry2;
     }
   }
 
-  float d2 = ((radius_y * radius_y) * ((x + 0.5f) * (x + 0.5f))) + ((radius_x * radius_x) * ((y - 1) * (y - 1))) - (radius_x * radius_x * radius_y * radius_y);
+  float d2 = (ry2 * ((x + 0.5f) * (x + 0.5f))) + (rx2 * ((y - 1) * (y - 1))) - (rx2 * ry2);
 
   while (y >= 0) {
     ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(y) + center_y);
@@ -306,19 +307,18 @@ void generate_fov_outline(float radius_x, float radius_y,
     ADD_NEW_POINT((ssize_t)(x) + center_x, (ssize_t)(-y) + center_y);
     ADD_NEW_POINT((ssize_t)(-x) + center_x, (ssize_t)(-y) + center_y);
 
+    y--;
     if (d2 > 0) {
-      y--;
-      dy = dy - (2 * radius_x * radius_x);
-      d2 = d2 + (radius_x * radius_x) - dy;
-    }
-    else {
-      y--;
+      dy = dy - (2 * rx2);
+      d2 = d2 + rx2 - dy;
+    } else {
       x++;
-      dx = dx + (2 * radius_y * radius_y);
-      dy = dy - (2 * radius_x * radius_x);
-      d2 = d2 + dx - dy + (radius_x * radius_x);
+      dx = dx + (2 * ry2);
+      dy = dy - (2 * rx2);
+      d2 = d2 + dx - dy + rx2;
     }
   }
+#undef ADD_NEW_POINT
 }
 
 void init_player(Player *player) {
