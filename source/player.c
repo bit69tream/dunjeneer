@@ -201,14 +201,16 @@ void apply_action(Player *player, LevelMap *map, Point location, Action action) 
 void process_mouse(Player *player, LevelMap *map) {
   (void) player;
 
-  /* TODO: allow to interact with objects only inside the FOV */
-
   if (is_action_key_pressed(KEYBIND_ACTION_ACTION_MENU)) {
     assert(ui_state.type == UI_STATE_NONE);
 
     Point mouse_position = mouse_in_world();
 
     LevelTile tile = (*map)[mouse_position.y][mouse_position.x];
+
+    if (!level_mask[mouse_position.y][mouse_position.x]) {
+      return;
+    }
 
     if (!can_interact(player, mouse_position, tile)) {
       /* TODO: play some sound */
