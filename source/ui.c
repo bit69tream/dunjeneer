@@ -160,7 +160,7 @@ void cleanup_rendering(void) {
   UnloadTexture(font);
 }
 
-Color tile_to_color(LevelTile tile) {
+Color tile_to_color(LevelTileType tile) {
   switch (tile) {
   case TILE_NONE: return BLANK;
   case TILE_WALL: return WHITE;
@@ -216,7 +216,7 @@ void render_map(LevelMap map) {
 
       LevelTile tile = map[y][x];
 
-      if (tile == TILE_NONE) {
+      if (tile.type == TILE_NONE) {
         continue;
       }
 
@@ -237,11 +237,11 @@ void render_map(LevelMap map) {
       DrawRectangleRec(bigger_position, BLACK);
 
       DrawTexturePro(font,
-                     glyphs[tile_to_glyph(tile)],
+                     glyphs[tile_to_glyph(tile.type)],
                      position,
                      (Vector2) {0, 0},
                      0,
-                     tile_to_color(tile));
+                     tile_to_color(tile.type));
     }
   }
 }

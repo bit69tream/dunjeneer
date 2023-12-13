@@ -37,6 +37,10 @@ typedef enum {
   TILE_MOUNTAIN,
 
   LEVEL_TILE_COUNT,
+} LevelTileType;
+
+typedef struct {
+  LevelTileType type;
 } LevelTile;
 
 typedef enum {
@@ -76,4 +80,4 @@ void generate_level(LevelMap *output_map,
                     Point *player_location,
                     LevelType type);
 
-bool is_tile_solid(LevelTile tile);
+bool is_tile_solid(LevelTileType tile);

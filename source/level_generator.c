@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-bool is_tile_solid(LevelTile tile) {
+bool is_tile_solid(LevelTileType tile) {
   switch (tile) {
   case TILE_FLOOR:
   case TILE_VERTICAL_OPENED_DOOR:
@@ -419,10 +419,10 @@ void put_horizontal_path(LevelMap *output_map,
   }
 
   for (size_t xi = x_start; xi <= x_end; xi++) {
-    if ((*output_map)[y][xi] == TILE_WALL && roll_dice(2)) {
-      (*output_map)[y][xi] = roll_dice(4) ? TILE_VERTICAL_LOCKED_DOOR : TILE_VERTICAL_CLOSED_DOOR;
+    if ((*output_map)[y][xi].type == TILE_WALL && roll_dice(2)) {
+      (*output_map)[y][xi].type = roll_dice(4) ? TILE_VERTICAL_LOCKED_DOOR : TILE_VERTICAL_CLOSED_DOOR;
     } else {
-      (*output_map)[y][xi] = TILE_FLOOR;
+      (*output_map)[y][xi].type = TILE_FLOOR;
     }
   }
 }
@@ -438,10 +438,10 @@ void put_vertical_path(LevelMap *output_map,
   }
 
   for (size_t yi = y_start; yi <= y_end; yi++) {
-    if ((*output_map)[yi][x] == TILE_WALL && roll_dice(2)) {
-      (*output_map)[yi][x] = roll_dice(4) ? TILE_HORIZONTAL_LOCKED_DOOR : TILE_HORIZONTAL_CLOSED_DOOR;
+    if ((*output_map)[yi][x].type == TILE_WALL && roll_dice(2)) {
+      (*output_map)[yi][x].type = roll_dice(4) ? TILE_HORIZONTAL_LOCKED_DOOR : TILE_HORIZONTAL_CLOSED_DOOR;
     } else {
-      (*output_map)[yi][x] = TILE_FLOOR;
+      (*output_map)[yi][x].type = TILE_FLOOR;
     }
   }
 }
@@ -454,7 +454,7 @@ void construct_map(LevelMap *output_map,
 
   for (size_t i = 0; i < LEVEL_HEIGHT; i++) {
     for (size_t j = 0; j < LEVEL_WIDTH; j++) {
-      (*output_map)[i][j] = TILE_NONE;
+      (*output_map)[i][j].type = TILE_NONE;
     }
   }
 
@@ -464,32 +464,32 @@ void construct_map(LevelMap *output_map,
 
     /* top */
     for (size_t xi = 0; xi < (size_t)rooms[i].width; xi++) {
-      (*output_map)[y][x + xi] = TILE_WALL;
+      (*output_map)[y][x + xi].type = TILE_WALL;
     }
 
     /* bottom */
     y += (size_t)rooms[i].height;
     for (size_t xi = 0; xi < (size_t)rooms[i].width; xi++) {
-      (*output_map)[y][x + xi] = TILE_WALL;
+      (*output_map)[y][x + xi].type = TILE_WALL;
     }
 
     /* left */
     y = (size_t)rooms[i].y;
     for (size_t yi = 0; yi <= (size_t)rooms[i].height; yi++) {
-      (*output_map)[y + yi][x] = TILE_WALL;
+      (*output_map)[y + yi][x].type = TILE_WALL;
     }
 
     /* right */
     x += (size_t)rooms[i].width;
     for (size_t yi = 0; yi <= (size_t)rooms[i].height; yi++) {
-      (*output_map)[y + yi][x] = TILE_WALL;
+      (*output_map)[y + yi][x].type = TILE_WALL;
     }
 
     /* floor */
     x = (size_t)rooms[i].x;
     for (size_t yi = 1; yi < (size_t)rooms[i].height; yi++) {
       for (size_t xi = 1; xi < (size_t)rooms[i].width; xi++) {
-        (*output_map)[y + yi][x + xi] = TILE_FLOOR;
+        (*output_map)[y + yi][x + xi].type = TILE_FLOOR;
       }
     }
   }
@@ -557,7 +557,7 @@ void generate_surface(LevelMap *output_map,
     for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
       uint8_t a = ((Color *)(noise.data))[(yi * LEVEL_WIDTH) + xi].r;
 
-      LevelTile t = TILE_NONE;
+      LevelTileType t = TILE_NONE;
 
       if (a < 50) {
         t = TILE_GROUND;
@@ -566,13 +566,13 @@ void generate_surface(LevelMap *output_map,
       } else {
         t = TILE_MOUNTAIN;
       }
-      (*output_map)[yi][xi] = t;
+      (*output_map)[yi][xi].type = t;
     }
   }
 
   size_t px = (size_t)rand_range(1, LEVEL_WIDTH - 1);
   size_t py = (size_t)rand_range(1, LEVEL_HEIGHT - 1);
-  while (is_tile_solid((*output_map)[py][px])) {
+  while (is_tile_solid((*output_map)[py][px].type)) {
     px = (size_t)rand_range(1, LEVEL_WIDTH - 1);
     py = (size_t)rand_range(1, LEVEL_HEIGHT - 1);
   }

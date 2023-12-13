@@ -119,7 +119,7 @@ Texture2D font_texture(void) {
   return font_texture;
 }
 
-size_t tile_to_glyph(LevelTile tile) {
+size_t tile_to_glyph(LevelTileType tile) {
   switch (tile) {
   case TILE_NONE: return ' ';
   case TILE_WALL: return '#';

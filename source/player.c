@@ -22,7 +22,7 @@ void process_player_movement(Player *player, LevelMap map) {
          player->direction == DIRECTION_LEFT ||
          player->direction == DIRECTION_RIGHT) &&
         (player->location.y != 0) &&
-        (!is_tile_solid(map[player->location.y - 1][player->location.x]))) {
+        (!is_tile_solid(map[player->location.y - 1][player->location.x].type))) {
       player->direction |= DIRECTION_UP;
       player->location_offset.y = (GLYPH_HEIGHT + GLYPH_GAP);
       player->location.y -= 1;
@@ -34,7 +34,7 @@ void process_player_movement(Player *player, LevelMap map) {
          player->direction == DIRECTION_DOWN ||
          player->direction == DIRECTION_UP) &&
         (player->location.x != 0) &&
-        (!is_tile_solid(map[player->location.y][player->location.x - 1]))) {
+        (!is_tile_solid(map[player->location.y][player->location.x - 1].type))) {
       player->direction |= DIRECTION_LEFT;
       player->location_offset.x = (GLYPH_WIDTH + GLYPH_GAP);
       player->location.x -= 1;
@@ -46,7 +46,7 @@ void process_player_movement(Player *player, LevelMap map) {
          player->direction == DIRECTION_LEFT ||
          player->direction == DIRECTION_RIGHT) &&
         (player->location.y != LEVEL_HEIGHT - 1) &&
-        (!is_tile_solid(map[player->location.y + 1][player->location.x]))) {
+        (!is_tile_solid(map[player->location.y + 1][player->location.x].type))) {
       player->direction |= DIRECTION_DOWN;
       player->location_offset.y = -(GLYPH_HEIGHT + GLYPH_GAP);
       player->location.y += 1;
@@ -58,7 +58,7 @@ void process_player_movement(Player *player, LevelMap map) {
          player->direction == DIRECTION_UP ||
          player->direction == DIRECTION_DOWN) &&
         (player->location.x != LEVEL_WIDTH - 1) &&
-        (!is_tile_solid(map[player->location.y][player->location.x + 1]))) {
+        (!is_tile_solid(map[player->location.y][player->location.x + 1].type))) {
       player->direction |= DIRECTION_RIGHT;
       player->location_offset.x = -(GLYPH_WIDTH + GLYPH_GAP);
       player->location.x += 1;
@@ -99,7 +99,7 @@ void process_player_movement(Player *player, LevelMap map) {
   player->location.y = CLAMP(0, LEVEL_HEIGHT - 1, player->location.y);
 }
 
-bool can_interact(Player *player, Point tile_location, LevelTile tile) {
+bool can_interact(Player *player, Point tile_location, LevelTileType tile) {
   (void) player;
   (void) tile_location;
 
@@ -141,9 +141,9 @@ void action_open(Player *player, LevelMap *map, Point location) {
 
   LevelTile *tile = &TILE_FROM_LOCATION(*map, location);
 
-  switch (*tile) {
-  case TILE_HORIZONTAL_CLOSED_DOOR: *tile = TILE_HORIZONTAL_OPENED_DOOR; break;
-  case TILE_VERTICAL_CLOSED_DOOR: *tile = TILE_VERTICAL_OPENED_DOOR; break;
+  switch (tile->type) {
+  case TILE_HORIZONTAL_CLOSED_DOOR: tile->type = TILE_HORIZONTAL_OPENED_DOOR; break;
+  case TILE_VERTICAL_CLOSED_DOOR: tile->type = TILE_VERTICAL_OPENED_DOOR; break;
   default: return;
   }
 }
@@ -153,9 +153,9 @@ void action_close(Player *player, LevelMap *map, Point location) {
 
   LevelTile *tile = &TILE_FROM_LOCATION(*map, location);
 
-  switch (*tile) {
-  case TILE_HORIZONTAL_OPENED_DOOR: *tile = TILE_HORIZONTAL_CLOSED_DOOR; break;
-  case TILE_VERTICAL_OPENED_DOOR: *tile = TILE_VERTICAL_CLOSED_DOOR; break;
+  switch (tile->type) {
+  case TILE_HORIZONTAL_OPENED_DOOR: tile->type = TILE_HORIZONTAL_CLOSED_DOOR; break;
+  case TILE_VERTICAL_OPENED_DOOR: tile->type = TILE_VERTICAL_CLOSED_DOOR; break;
   default: return;
   }
 }
@@ -165,7 +165,7 @@ void action_kick(Player *player, LevelMap *map, Point location) {
 
   LevelTile *tile = &TILE_FROM_LOCATION(*map, location);
 
-  switch (*tile) {
+  switch (tile->type) {
   case TILE_HORIZONTAL_CLOSED_DOOR:
   case TILE_VERTICAL_CLOSED_DOOR:
   case TILE_HORIZONTAL_LOCKED_DOOR:
@@ -174,7 +174,7 @@ void action_kick(Player *player, LevelMap *map, Point location) {
   case TILE_VERTICAL_OPENED_DOOR: {
     /* TODO: keep track of how damaged a tile is and decide stuff based on that */
     if (roll_dice(3)) {
-       *tile = TILE_FLOOR;
+       tile->type = TILE_FLOOR;
     }
   } break;
   default: break;               /* TODO: game need some way to show messages to player */
@@ -208,7 +208,7 @@ void process_mouse(Player *player, LevelMap *map) {
       return;
     }
 
-    if (!can_interact(player, mouse_position, tile)) {
+    if (!can_interact(player, mouse_position, tile.type)) {
       /* TODO: play some sound */
       return;
     }
@@ -299,7 +299,7 @@ void trace_ray(Vector2 from, Vector2 to,
 
     level_mask[check.y][check.x] = true;
 
-    if (is_tile_solid(tile)) {
+    if (is_tile_solid(tile.type)) {
       break;
     }
   }

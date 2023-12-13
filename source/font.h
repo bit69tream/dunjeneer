@@ -21,6 +21,6 @@ typedef enum {
 extern Rectangle glyphs[128];
 
 Texture2D font_texture(void);
-size_t tile_to_glyph(LevelTile tile);
+size_t tile_to_glyph(LevelTileType tile);
 size_t object_type_to_glyph(LevelObjectType object_type);
 size_t action_to_glyph(Action action);
