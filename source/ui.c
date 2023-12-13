@@ -1,3 +1,4 @@
+#include "rand.h"
 #include <stddef.h>
 #include <sys/types.h>
 #define UI_STATE
@@ -353,8 +354,8 @@ void render_drill(Player player) {
   }
 
   Rectangle position = {
-    .x = X_TO_SCREEN(dx, float) - GLYPH_GAP,
-    .y = Y_TO_SCREEN(dy, float) - GLYPH_GAP,
+    .x = X_TO_SCREEN(dx, float) - GLYPH_GAP + (float)rand_range(-1, 1),
+    .y = Y_TO_SCREEN(dy, float) - GLYPH_GAP + (float)rand_range(-1, 1),
     .width = GLYPH_WIDTH + (GLYPH_GAP * 2),
     .height = GLYPH_HEIGHT + (GLYPH_GAP * 2),
   };
