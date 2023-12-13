@@ -14,6 +14,8 @@ bool is_tile_solid(LevelTileType tile) {
   case TILE_HORIZONTAL_OPENED_DOOR:
   case TILE_GROUND:
   case TILE_HILL:
+  case TILE_ELEVATOR_UP:
+  case TILE_ELEVATOR_DOWN:
     return false;
 
   case TILE_NONE:
@@ -522,25 +524,11 @@ void construct_map(LevelMap *output_map,
 }
 
 void generate_objects(LevelObject objects[OBJECTS_MAX], size_t *objects_len,
-                      Room rooms[ROOMS_MAX], size_t rooms_len, size_t *player_room) {
-
-  size_t elevator_up = 0;
-  PUSH(objects, objects_len, OBJECTS_MAX, &elevator_up);
-
-  size_t i = (size_t)rand_range(0, (int)rooms_len - 1);
-
-  objects[elevator_up].type = OBJECT_ELEVATOR_UP;
-  RANDOM_POINT_INSIDE_OF_THE_ROOM(&objects[elevator_up].location,
-                                  rooms[i]);
-
-  *player_room = (size_t)rand_range(0, (int)rooms_len - 1);
-
-  size_t elevator_down = 0;
-  PUSH(objects, objects_len, OBJECTS_MAX, &elevator_down);
-
-  objects[elevator_down].type = OBJECT_ELEVATOR_DOWN;
-  RANDOM_POINT_INSIDE_OF_THE_ROOM(&objects[elevator_down].location,
-                                  rooms[*player_room]);
+                      Room rooms[ROOMS_MAX], size_t rooms_len) {
+  (void) objects;
+  (void) objects_len;
+  (void) rooms;
+  (void) rooms_len;
 }
 
 void generate_surface(LevelMap *output_map,
@@ -595,15 +583,23 @@ void generate_dungeon(LevelMap *output_map,
   generate_rooms(rooms, &rooms_len);
   generate_paths_between_rooms(rooms, rooms_len, paths, &paths_len);
 
-  size_t player_room = 0;
-
   generate_objects(objects, objects_len,
-                   rooms, rooms_len,
-                   &player_room);
-
-  RANDOM_POINT_INSIDE_OF_THE_ROOM(player_location, rooms[player_room]);
+                   rooms, rooms_len);
 
   construct_map(output_map, rooms, rooms_len, paths, paths_len);
+
+  size_t i = (size_t)rand_range(0, (int)rooms_len - 1);
+
+  Point loc;
+  RANDOM_POINT_INSIDE_OF_THE_ROOM(&loc, rooms[i]);
+  output_map->map[loc.y][loc.x].type = TILE_ELEVATOR_UP;
+
+  size_t player_room = (size_t)rand_range(0, (int)rooms_len - 1);
+
+  RANDOM_POINT_INSIDE_OF_THE_ROOM(&loc, rooms[player_room]);
+  output_map->map[loc.y][loc.x].type = TILE_ELEVATOR_UP;
+
+  RANDOM_POINT_INSIDE_OF_THE_ROOM(player_location, rooms[player_room]);
 }
 
 bool can_be_drilled(LevelTileType tile) {
@@ -613,6 +609,8 @@ bool can_be_drilled(LevelTileType tile) {
   case TILE_GROUND:
   case TILE_HILL:
   case TILE_WALL:
+  case TILE_ELEVATOR_DOWN:
+  case TILE_ELEVATOR_UP:
     return false;
 
   case TILE_VERTICAL_OPENED_DOOR:
@@ -640,6 +638,8 @@ void set_up_tile_metadata(LevelMap *output_map) {
       case TILE_GROUND:
       case TILE_HILL:
       case TILE_WALL:
+      case TILE_ELEVATOR_UP:
+      case TILE_ELEVATOR_DOWN:
         break;
 
       case TILE_VERTICAL_OPENED_DOOR:

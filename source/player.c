@@ -99,23 +99,6 @@ void process_player_movement(Player *player, const LevelMap *map) {
   player->location.y = CLAMP(0, LEVEL_HEIGHT - 1, player->location.y);
 }
 
-bool can_interact(Player *player, Point tile_location, LevelTileType tile) {
-  (void) player;
-  (void) tile_location;
-
-  switch (tile) {
-  case TILE_NONE:
-  case TILE_FLOOR:
-  case TILE_WALL:
-    return false;
-  case LEVEL_TILE_COUNT:
-    assert(false && "bug");
-  default: return true;
-  }
-
-  return true;
-}
-
 Action get_action_from_menu(void) {
   Point mouse_position = mouse_in_world();
 
@@ -218,14 +201,7 @@ void process_mouse(Player *player, LevelMap *map) {
   if (is_action_key_pressed(KEYBIND_ACTION_ACTION_MENU)) {
     assert(ui_state.type == UI_STATE_NONE);
 
-    LevelTile tile = map->map[mouse_position.y][mouse_position.x];
-
     if (!level_mask[mouse_position.y][mouse_position.x]) {
-      return;
-    }
-
-    if (!can_interact(player, mouse_position, tile.type)) {
-      /* TODO: play some sound */
       return;
     }
 

@@ -121,6 +121,8 @@ Texture2D font_texture(void) {
 
 size_t tile_to_glyph(LevelTileType tile) {
   switch (tile) {
+  case TILE_ELEVATOR_UP: return '<';
+  case TILE_ELEVATOR_DOWN: return '>';
   case TILE_NONE: return ' ';
   case TILE_WALL: return '#';
   case TILE_VERTICAL_LOCKED_DOOR:
@@ -142,8 +144,6 @@ size_t tile_to_glyph(LevelTileType tile) {
 size_t object_type_to_glyph(LevelObjectType object_type) {
   switch (object_type) {
   case OBJECT_NONE: assert(false && "skill issue");
-  case OBJECT_ELEVATOR_DOWN: return '>';
-  case OBJECT_ELEVATOR_UP: return '<';
   case LEVEL_OBJECT_COUNT: assert(false && "nuh uh");
   }
 

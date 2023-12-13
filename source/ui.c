@@ -166,6 +166,9 @@ Color tile_to_background(LevelTileType tile) {
   case TILE_WALL:
   case TILE_FLOOR:
 
+  case TILE_ELEVATOR_DOWN:
+  case TILE_ELEVATOR_UP:
+
   case TILE_VERTICAL_CLOSED_DOOR:
   case TILE_HORIZONTAL_CLOSED_DOOR:
   case TILE_VERTICAL_LOCKED_DOOR:
@@ -191,6 +194,9 @@ Color tile_to_color(LevelTileType tile) {
   case TILE_WALL: return WHITE;
   case TILE_FLOOR: return DARKGRAY;
 
+  case TILE_ELEVATOR_UP: return WHITE;
+  case TILE_ELEVATOR_DOWN: return WHITE;
+
   case TILE_VERTICAL_CLOSED_DOOR:
   case TILE_HORIZONTAL_CLOSED_DOOR:
   case TILE_VERTICAL_LOCKED_DOOR:
@@ -211,8 +217,6 @@ Color tile_to_color(LevelTileType tile) {
 Color object_type_to_color(LevelObjectType type) {
   switch (type) {
   case OBJECT_NONE: return BLANK;
-  case OBJECT_ELEVATOR_DOWN: return WHITE;
-  case OBJECT_ELEVATOR_UP: return WHITE;
   case LEVEL_OBJECT_COUNT: assert(false && "nuh uh");
   }
 
