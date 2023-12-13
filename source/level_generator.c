@@ -1,9 +1,11 @@
 #include "level_generator.h"
 #include "rand.h"
+#include "raylib.h"
 #include "utils.h"
 
 #include <math.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 bool is_tile_solid(LevelTile tile) {
   switch (tile) {
@@ -541,9 +543,49 @@ void generate_objects(LevelObject objects[OBJECTS_MAX], size_t *objects_len,
                                   rooms[*player_room]);
 }
 
-void generate_level(LevelMap *output_map,
-                    LevelObject objects[OBJECTS_MAX], size_t *objects_len,
-                    Point *player_location) {
+void generate_surface(LevelMap *output_map,
+                      LevelObject objects[OBJECTS_MAX], size_t *objects_len,
+                      Point *player_location) {
+  (void) objects;
+  (void) objects_len;
+
+  Image noise = GenImagePerlinNoise(LEVEL_WIDTH, LEVEL_HEIGHT,
+                                    0, 0,
+                                    3.0f);
+
+  for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
+    for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
+      uint8_t a = ((Color *)(noise.data))[(yi * LEVEL_WIDTH) + xi].r;
+
+      LevelTile t = TILE_NONE;
+
+      if (a < 50) {
+        t = TILE_GROUND;
+      } else if (a < 120) {
+        t = TILE_HILL;
+      } else {
+        t = TILE_MOUNTAIN;
+      }
+      (*output_map)[yi][xi] = t;
+    }
+  }
+
+  size_t px = (size_t)rand_range(1, LEVEL_WIDTH - 1);
+  size_t py = (size_t)rand_range(1, LEVEL_HEIGHT - 1);
+  while (is_tile_solid((*output_map)[py][px])) {
+    px = (size_t)rand_range(1, LEVEL_WIDTH - 1);
+    py = (size_t)rand_range(1, LEVEL_HEIGHT - 1);
+  }
+
+  player_location->x = px;
+  player_location->y = py;
+
+  UnloadImage(noise);
+}
+
+void generate_dungeon(LevelMap *output_map,
+                      LevelObject objects[OBJECTS_MAX], size_t *objects_len,
+                      Point *player_location) {
   static Room rooms[ROOMS_MAX] = {0};
   size_t rooms_len = 0;
 
@@ -562,4 +604,17 @@ void generate_level(LevelMap *output_map,
   RANDOM_POINT_INSIDE_OF_THE_ROOM(player_location, rooms[player_room]);
 
   construct_map(output_map, rooms, rooms_len, paths, paths_len);
+}
+
+void generate_level(LevelMap *output_map,
+                    LevelObject objects[OBJECTS_MAX], size_t *objects_len,
+                    Point *player_location,
+                    LevelType type) {
+  switch (type) {
+  case LEVEL_NONE:
+  case LEVEL_TYPE_COUNT: assert(false && ":<");
+
+  case LEVEL_SURFACE: generate_surface(output_map, objects, objects_len, player_location); return;
+  case LEVEL_DUNGEON: generate_dungeon(output_map, objects, objects_len, player_location); return;
+  }
 }

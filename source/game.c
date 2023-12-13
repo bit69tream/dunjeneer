@@ -101,33 +101,7 @@ int main(void) {
   Player player = {0};
   init_player(&player);
 
-  /* generate_level(&map, objects, &objects_len, &player.location); */
-
-
-  Image noise = GenImagePerlinNoise(LEVEL_WIDTH, LEVEL_HEIGHT,
-                                    0, 0,
-                                    3.0f);
-
-  /* LevelMap map; */
-  for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
-    for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
-      uint8_t a = ((Color *)(noise.data))[(yi * LEVEL_WIDTH) + xi].r;
-
-      LevelTile t = TILE_NONE;
-
-      if (a < 5) {
-        t = TILE_GROUND;
-      } else if (a < 50) {
-        t = TILE_GROUND;
-      } else if (a < 120) {
-        t = TILE_HILL;
-      } else {
-        t = TILE_MOUNTAIN;
-      }
-      map[yi][xi] = t;
-    }
-  }
-
+  generate_level(&map, objects, &objects_len, &player.location, LEVEL_SURFACE);
 
   /* TODO: https://www.squidi.net/three/entry.php?id=83 */
 

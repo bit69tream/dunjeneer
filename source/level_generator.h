@@ -51,6 +51,13 @@ typedef struct {
   Point location;
 } LevelObject;
 
+typedef enum {
+  LEVEL_NONE,
+  LEVEL_SURFACE,
+  LEVEL_DUNGEON,
+  LEVEL_TYPE_COUNT,
+} LevelType;
+
 #define LEVEL_WIDTH 200
 #define LEVEL_HEIGHT 80
 
@@ -64,7 +71,9 @@ typedef LevelTile LevelMap[LEVEL_HEIGHT][LEVEL_WIDTH];
 
 #define OBJECTS_MAX 128
 
-void generate_level(LevelMap *output_map, LevelObject objects[OBJECTS_MAX], size_t *objects_len, Point *player_location);
-
+void generate_level(LevelMap *output_map,
+                    LevelObject objects[OBJECTS_MAX], size_t *objects_len,
+                    Point *player_location,
+                    LevelType type);
 
 bool is_tile_solid(LevelTile tile);
