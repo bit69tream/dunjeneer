@@ -160,6 +160,31 @@ void cleanup_rendering(void) {
   UnloadTexture(font);
 }
 
+Color tile_to_background(LevelTileType tile) {
+  switch (tile) {
+  case TILE_NONE:
+  case TILE_WALL:
+  case TILE_FLOOR:
+
+  case TILE_VERTICAL_CLOSED_DOOR:
+  case TILE_HORIZONTAL_CLOSED_DOOR:
+  case TILE_VERTICAL_LOCKED_DOOR:
+  case TILE_HORIZONTAL_LOCKED_DOOR:
+  case TILE_VERTICAL_OPENED_DOOR:
+  case TILE_HORIZONTAL_OPENED_DOOR:
+
+  case TILE_GROUND:
+  case TILE_HILL:
+  case TILE_MOUNTAIN:
+
+    return BLACK;
+
+  case LEVEL_TILE_COUNT: assert(false && "nuh uh");
+  }
+
+  assert(false);
+}
+
 Color tile_to_color(LevelTileType tile) {
   switch (tile) {
   case TILE_NONE: return BLANK;
@@ -234,7 +259,7 @@ void render_map(const LevelMap *map) {
         .height = position.height + (2 * GLYPH_GAP),
       };
 
-      DrawRectangleRec(bigger_position, BLACK);
+      DrawRectangleRec(bigger_position, tile_to_background(tile.type));
 
       DrawTexturePro(font,
                      glyphs[tile_to_glyph(tile.type)],
