@@ -14,6 +14,9 @@ typedef struct {
 
   size_t max_health;
   size_t health;
+
+  bool is_drilling;
+  Vector2I drill_offset;
 } Player;
 
 typedef enum {
@@ -41,3 +44,5 @@ void init_player(Player *player);
 
 void trace_rays_for_fov(Player player,
                         LevelMap map);
+
+void update_drill_position(Player *player);

@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <sys/types.h>
 #define UI_STATE
 
 #include "ui.h"
@@ -339,6 +340,28 @@ void render_action_menu(void) {
   }
 }
 
+void render_drill(Player player) {
+  if (!player.is_drilling) {
+    return;
+  }
+
+  ssize_t dx = ((ssize_t)player.location.x + player.drill_offset.x);
+  ssize_t dy = ((ssize_t)player.location.y + player.drill_offset.y);
+  if ((dx < 0 || dx >= LEVEL_WIDTH) ||
+      (dy < 0 || dy >= LEVEL_HEIGHT)) {
+    return;
+  }
+
+  Rectangle position = {
+    .x = X_TO_SCREEN(dx, float) - GLYPH_GAP,
+    .y = Y_TO_SCREEN(dy, float) - GLYPH_GAP,
+    .width = GLYPH_WIDTH + (GLYPH_GAP * 2),
+    .height = GLYPH_HEIGHT + (GLYPH_GAP * 2),
+  };
+
+  DrawRectangleRec(position, WHITE);
+}
+
 void render(LevelMap map,
             LevelObject objects[OBJECTS_MAX], size_t objects_len,
             Player player) {
@@ -368,6 +391,7 @@ void render(LevelMap map,
     render_noise(texture_width, texture_height);
     render_map(map);
     render_objects(objects, objects_len);
+    render_drill(player);
     render_player(player);
 
     render_action_menu();

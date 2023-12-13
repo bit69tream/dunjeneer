@@ -195,7 +195,7 @@ void apply_action(Player *player, LevelMap *map, Point location, Action action) 
 }
 
 void process_mouse(Player *player, LevelMap *map) {
-  (void) player;
+  player->is_drilling = is_action_key_down(KEYBIND_ACTION_FIRE);
 
   if (is_action_key_pressed(KEYBIND_ACTION_ACTION_MENU)) {
     assert(ui_state.type == UI_STATE_NONE);
@@ -338,4 +338,22 @@ void init_player(Player *player) {
   player->health =
     player->max_health =
     PLAYER_INITIAL_MAX_HEALTH;
+}
+
+void update_drill_position(Player *player) {
+  Point m = mouse_in_world();
+  Vector2 to = (Vector2) {
+    .x = (float) m.x,
+    .y = (float) m.y,
+  };
+  Vector2 from = (Vector2) {
+    .x = (float) player->location.x,
+    .y = (float) player->location.y,
+  };
+  Vector2 dir = Vector2Normalize(Vector2Subtract(to, from));
+
+  player->drill_offset = (Vector2I) {
+    .x = (ssize_t)roundf(dir.x),
+    .y = (ssize_t)roundf(dir.y),
+  };
 }

@@ -84,6 +84,8 @@ int main2(void) {
 }
 #endif
 
+#include <stdio.h>
+
 int main(void) {
   time_t seed = time(0);
   srand((unsigned int)seed);
@@ -145,9 +147,8 @@ int main(void) {
     }
 
     process_player_movement(&player, map);
-
     process_mouse(&player, &map);
-
+    update_drill_position(&player);
     trace_rays_for_fov(player, map);
 
     render(map, objects, objects_len, player);
