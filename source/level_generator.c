@@ -574,8 +574,8 @@ void generate_surface(LevelMap *output_map,
   ssize_t ex = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
   ssize_t ey = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
 
-  while (((px + ex) >= 0 && (px + ex) < (LEVEL_WIDTH - 1)) &&
-         ((py + ey) >= 0 && (py + ey) < (LEVEL_HEIGHT - 1)) &&
+  while (((px + ex) < 0 || (px + ex) >= LEVEL_WIDTH) ||
+         ((py + ey) < 0 || (py + ey) >= LEVEL_HEIGHT) ||
          is_tile_solid(output_map->map[py + ey][px + ex].type)) {
     ex = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
     ey = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
