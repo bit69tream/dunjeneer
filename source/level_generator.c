@@ -419,10 +419,10 @@ void put_horizontal_path(LevelMap *output_map,
   }
 
   for (size_t xi = x_start; xi <= x_end; xi++) {
-    if ((*output_map)[y][xi].type == TILE_WALL && roll_dice(2)) {
-      (*output_map)[y][xi].type = roll_dice(4) ? TILE_VERTICAL_LOCKED_DOOR : TILE_VERTICAL_CLOSED_DOOR;
+    if (output_map->map[y][xi].type == TILE_WALL && roll_dice(2)) {
+      output_map->map[y][xi].type = roll_dice(4) ? TILE_VERTICAL_LOCKED_DOOR : TILE_VERTICAL_CLOSED_DOOR;
     } else {
-      (*output_map)[y][xi].type = TILE_FLOOR;
+      output_map->map[y][xi].type = TILE_FLOOR;
     }
   }
 }
@@ -438,10 +438,10 @@ void put_vertical_path(LevelMap *output_map,
   }
 
   for (size_t yi = y_start; yi <= y_end; yi++) {
-    if ((*output_map)[yi][x].type == TILE_WALL && roll_dice(2)) {
-      (*output_map)[yi][x].type = roll_dice(4) ? TILE_HORIZONTAL_LOCKED_DOOR : TILE_HORIZONTAL_CLOSED_DOOR;
+    if (output_map->map[yi][x].type == TILE_WALL && roll_dice(2)) {
+      output_map->map[yi][x].type = roll_dice(4) ? TILE_HORIZONTAL_LOCKED_DOOR : TILE_HORIZONTAL_CLOSED_DOOR;
     } else {
-      (*output_map)[yi][x].type = TILE_FLOOR;
+      output_map->map[yi][x].type = TILE_FLOOR;
     }
   }
 }
@@ -454,7 +454,7 @@ void construct_map(LevelMap *output_map,
 
   for (size_t i = 0; i < LEVEL_HEIGHT; i++) {
     for (size_t j = 0; j < LEVEL_WIDTH; j++) {
-      (*output_map)[i][j].type = TILE_NONE;
+      output_map->map[i][j].type = TILE_NONE;
     }
   }
 
@@ -464,32 +464,32 @@ void construct_map(LevelMap *output_map,
 
     /* top */
     for (size_t xi = 0; xi < (size_t)rooms[i].width; xi++) {
-      (*output_map)[y][x + xi].type = TILE_WALL;
+      output_map->map[y][x + xi].type = TILE_WALL;
     }
 
     /* bottom */
     y += (size_t)rooms[i].height;
     for (size_t xi = 0; xi < (size_t)rooms[i].width; xi++) {
-      (*output_map)[y][x + xi].type = TILE_WALL;
+      output_map->map[y][x + xi].type = TILE_WALL;
     }
 
     /* left */
     y = (size_t)rooms[i].y;
     for (size_t yi = 0; yi <= (size_t)rooms[i].height; yi++) {
-      (*output_map)[y + yi][x].type = TILE_WALL;
+      output_map->map[y + yi][x].type = TILE_WALL;
     }
 
     /* right */
     x += (size_t)rooms[i].width;
     for (size_t yi = 0; yi <= (size_t)rooms[i].height; yi++) {
-      (*output_map)[y + yi][x].type = TILE_WALL;
+      output_map->map[y + yi][x].type = TILE_WALL;
     }
 
     /* floor */
     x = (size_t)rooms[i].x;
     for (size_t yi = 1; yi < (size_t)rooms[i].height; yi++) {
       for (size_t xi = 1; xi < (size_t)rooms[i].width; xi++) {
-        (*output_map)[y + yi][x + xi].type = TILE_FLOOR;
+        output_map->map[y + yi][x + xi].type = TILE_FLOOR;
       }
     }
   }
@@ -566,13 +566,13 @@ void generate_surface(LevelMap *output_map,
       } else {
         t = TILE_MOUNTAIN;
       }
-      (*output_map)[yi][xi].type = t;
+      output_map->map[yi][xi].type = t;
     }
   }
 
   size_t px = (size_t)rand_range(1, LEVEL_WIDTH - 1);
   size_t py = (size_t)rand_range(1, LEVEL_HEIGHT - 1);
-  while (is_tile_solid((*output_map)[py][px].type)) {
+  while (is_tile_solid(output_map->map[py][px].type)) {
     px = (size_t)rand_range(1, LEVEL_WIDTH - 1);
     py = (size_t)rand_range(1, LEVEL_HEIGHT - 1);
   }
@@ -634,7 +634,7 @@ bool can_be_drilled(LevelTileType tile) {
 void set_up_tile_metadata(LevelMap *output_map) {
   for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
     for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
-      switch ((*output_map)[yi][xi].type) {
+      switch (output_map->map[yi][xi].type) {
       case TILE_NONE:
       case TILE_FLOOR:
       case TILE_GROUND:
@@ -648,17 +648,29 @@ void set_up_tile_metadata(LevelMap *output_map) {
       case TILE_HORIZONTAL_CLOSED_DOOR:
       case TILE_VERTICAL_LOCKED_DOOR:
       case TILE_HORIZONTAL_LOCKED_DOOR:
-        (*output_map)[yi][xi].durability = 30;
+        output_map->map[yi][xi].durability = 15;
         break;
 
       case TILE_MOUNTAIN:
-        (*output_map)[yi][xi].durability = 120;
+        output_map->map[yi][xi].durability = 60;
         break;
 
       case LEVEL_TILE_COUNT: assert(false);
       }
     }
   }
+}
+
+LevelTileType level_floor(LevelType type) {
+  switch (type) {
+  case LEVEL_NONE:
+  case LEVEL_TYPE_COUNT: assert(false);
+
+  case LEVEL_DUNGEON: return TILE_FLOOR;
+  case LEVEL_SURFACE: return TILE_GROUND;
+  }
+
+  assert(false);
 }
 
 void generate_level(LevelMap *output_map,
@@ -669,9 +681,11 @@ void generate_level(LevelMap *output_map,
   case LEVEL_NONE:
   case LEVEL_TYPE_COUNT: assert(false && ":<");
 
-  case LEVEL_SURFACE: generate_surface(output_map, objects, objects_len, player_location); return;
-  case LEVEL_DUNGEON: generate_dungeon(output_map, objects, objects_len, player_location); return;
+  case LEVEL_SURFACE: generate_surface(output_map, objects, objects_len, player_location); break;
+  case LEVEL_DUNGEON: generate_dungeon(output_map, objects, objects_len, player_location); break;
   }
 
   set_up_tile_metadata(output_map);
+  output_map->floor = level_floor(type);
+  output_map->type = type;
 }

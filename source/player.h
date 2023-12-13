@@ -35,7 +35,7 @@ typedef enum {
 typedef bool LevelMapVisibleMask[LEVEL_HEIGHT][LEVEL_WIDTH];
 extern LevelMapVisibleMask level_mask;
 
-void process_player_movement(Player *player, LevelMap map);
+void process_player_movement(Player *player, const LevelMap *map);
 void process_mouse(Player *player, LevelMap *map);
 
 Color health_to_color(Player player);
@@ -43,6 +43,6 @@ Color health_to_color(Player player);
 void init_player(Player *player);
 
 void trace_rays_for_fov(Player player,
-                        LevelMap map);
+                        const LevelMap *map);
 
 void update_drill_position(Player *player);

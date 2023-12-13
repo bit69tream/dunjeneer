@@ -207,14 +207,14 @@ void render_noise(int width, int height) {
   } EndShaderMode();
 }
 
-void render_map(LevelMap map) {
+void render_map(const LevelMap *map) {
   for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
     for (size_t x = 0; x < LEVEL_WIDTH; x++) {
       if (!level_mask[y][x]) {
         continue;
       }
 
-      LevelTile tile = map[y][x];
+      LevelTile tile = map->map[y][x];
 
       if (tile.type == TILE_NONE) {
         continue;
@@ -363,7 +363,7 @@ void render_drill(Player player) {
   DrawRectangleRec(position, WHITE);
 }
 
-void render(LevelMap map,
+void render(const LevelMap *map,
             LevelObject objects[OBJECTS_MAX], size_t objects_len,
             Player player) {
   float player_screen_x = X_TO_SCREEN(player.location.x, float) + (GLYPH_WIDTH / 2.0f);

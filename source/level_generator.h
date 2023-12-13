@@ -68,7 +68,11 @@ typedef enum {
 #define LEVEL_WIDTH 200
 #define LEVEL_HEIGHT 80
 
-typedef LevelTile LevelMap[LEVEL_HEIGHT][LEVEL_WIDTH];
+typedef struct {
+  LevelType type;
+  LevelTileType floor;
+  LevelTile map[LEVEL_HEIGHT][LEVEL_WIDTH];
+} LevelMap;
 
 #define LEAFS_MAX 128
 #define MIN_LEAF_SIZE 20

@@ -146,12 +146,12 @@ int main(void) {
       update_mouse();
     }
 
-    process_player_movement(&player, map);
+    process_player_movement(&player, &map);
     update_drill_position(&player);
     process_mouse(&player, &map);
-    trace_rays_for_fov(player, map);
+    trace_rays_for_fov(player, &map);
 
-    render(map, objects, objects_len, player);
+    render(&map, objects, objects_len, player);
   }
 
   cleanup_rendering();

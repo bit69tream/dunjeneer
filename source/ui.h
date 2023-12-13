@@ -19,7 +19,7 @@ extern UIState ui_state;
 
 extern Vector2I action_menu_offsets[ACTION_COUNT];
 
-void render(LevelMap map,
+void render(const LevelMap *map,
             LevelObject objects[OBJECTS_MAX], size_t objects_len,
             Player player);
 void init_rendering(void);

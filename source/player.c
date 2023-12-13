@@ -16,13 +16,13 @@
 
 LevelMapVisibleMask level_mask;
 
-void process_player_movement(Player *player, LevelMap map) {
+void process_player_movement(Player *player, const LevelMap *map) {
   if (is_action_key_down(KEYBIND_ACTION_MOVE_UP)) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_LEFT ||
          player->direction == DIRECTION_RIGHT) &&
         (player->location.y != 0) &&
-        (!is_tile_solid(map[player->location.y - 1][player->location.x].type))) {
+        (!is_tile_solid(map->map[player->location.y - 1][player->location.x].type))) {
       player->direction |= DIRECTION_UP;
       player->location_offset.y = (GLYPH_HEIGHT + GLYPH_GAP);
       player->location.y -= 1;
@@ -34,7 +34,7 @@ void process_player_movement(Player *player, LevelMap map) {
          player->direction == DIRECTION_DOWN ||
          player->direction == DIRECTION_UP) &&
         (player->location.x != 0) &&
-        (!is_tile_solid(map[player->location.y][player->location.x - 1].type))) {
+        (!is_tile_solid(map->map[player->location.y][player->location.x - 1].type))) {
       player->direction |= DIRECTION_LEFT;
       player->location_offset.x = (GLYPH_WIDTH + GLYPH_GAP);
       player->location.x -= 1;
@@ -46,7 +46,7 @@ void process_player_movement(Player *player, LevelMap map) {
          player->direction == DIRECTION_LEFT ||
          player->direction == DIRECTION_RIGHT) &&
         (player->location.y != LEVEL_HEIGHT - 1) &&
-        (!is_tile_solid(map[player->location.y + 1][player->location.x].type))) {
+        (!is_tile_solid(map->map[player->location.y + 1][player->location.x].type))) {
       player->direction |= DIRECTION_DOWN;
       player->location_offset.y = -(GLYPH_HEIGHT + GLYPH_GAP);
       player->location.y += 1;
@@ -58,7 +58,7 @@ void process_player_movement(Player *player, LevelMap map) {
          player->direction == DIRECTION_UP ||
          player->direction == DIRECTION_DOWN) &&
         (player->location.x != LEVEL_WIDTH - 1) &&
-        (!is_tile_solid(map[player->location.y][player->location.x + 1].type))) {
+        (!is_tile_solid(map->map[player->location.y][player->location.x + 1].type))) {
       player->direction |= DIRECTION_RIGHT;
       player->location_offset.x = -(GLYPH_WIDTH + GLYPH_GAP);
       player->location.x += 1;
@@ -139,7 +139,7 @@ Action get_action_from_menu(void) {
 void action_open(Player *player, LevelMap *map, Point location) {
   (void) player;
 
-  LevelTile *tile = &TILE_FROM_LOCATION(*map, location);
+  LevelTile *tile = &TILE_FROM_LOCATION(map->map, location);
 
   switch (tile->type) {
   case TILE_HORIZONTAL_CLOSED_DOOR: tile->type = TILE_HORIZONTAL_OPENED_DOOR; break;
@@ -151,7 +151,7 @@ void action_open(Player *player, LevelMap *map, Point location) {
 void action_close(Player *player, LevelMap *map, Point location) {
   (void) player;
 
-  LevelTile *tile = &TILE_FROM_LOCATION(*map, location);
+  LevelTile *tile = &TILE_FROM_LOCATION(map->map, location);
 
   switch (tile->type) {
   case TILE_HORIZONTAL_OPENED_DOOR: tile->type = TILE_HORIZONTAL_CLOSED_DOOR; break;
@@ -163,7 +163,7 @@ void action_close(Player *player, LevelMap *map, Point location) {
 void action_kick(Player *player, LevelMap *map, Point location) {
   (void) player;
 
-  LevelTile *tile = &TILE_FROM_LOCATION(*map, location);
+  LevelTile *tile = &TILE_FROM_LOCATION(map->map, location);
 
   switch (tile->type) {
   case TILE_HORIZONTAL_CLOSED_DOOR:
@@ -205,12 +205,12 @@ void process_mouse(Player *player, LevelMap *map) {
 
     if ((dx >= 0 && dx < LEVEL_WIDTH) &&
         (dy >= 0 && dy < LEVEL_HEIGHT) &&
-        can_be_drilled((*map)[dy][dx].type)) {
-      (*map)[dy][dx].durability -= 1;
-      if ((*map)[dy][dx].durability <= 0) {
-        (*map)[dy][dx].type = TILE_FLOOR;
+        can_be_drilled(map->map[dy][dx].type)) {
+      map->map[dy][dx].durability -= 1;
+      if (map->map[dy][dx].durability <= 0) {
+        map->map[dy][dx].type = map->floor;
       }
-      (*map)[dy][dx].durability = CLAMP(0, DURABILITY_MAX, (*map)[dy][dx].durability);
+      map->map[dy][dx].durability = CLAMP(0, DURABILITY_MAX, map->map[dy][dx].durability);
     }
 
   }
@@ -218,7 +218,7 @@ void process_mouse(Player *player, LevelMap *map) {
   if (is_action_key_pressed(KEYBIND_ACTION_ACTION_MENU)) {
     assert(ui_state.type == UI_STATE_NONE);
 
-    LevelTile tile = (*map)[mouse_position.y][mouse_position.x];
+    LevelTile tile = map->map[mouse_position.y][mouse_position.x];
 
     if (!level_mask[mouse_position.y][mouse_position.x]) {
       return;
@@ -263,7 +263,7 @@ Color health_to_color(Player player) {
 }
 
 void trace_ray(Vector2 from, Vector2 to,
-               LevelMap map) {
+               const LevelMap *map) {
   Vector2 dir = Vector2Normalize(Vector2Subtract(to, from));
 
   Vector2 unit_step_size = (Vector2) {
@@ -311,7 +311,7 @@ void trace_ray(Vector2 from, Vector2 to,
       break;
     }
 
-    LevelTile tile = map[check.y][check.x];
+    LevelTile tile = map->map[check.y][check.x];
 
     level_mask[check.y][check.x] = true;
 
@@ -322,7 +322,7 @@ void trace_ray(Vector2 from, Vector2 to,
 }
 
 void trace_rays_for_fov(Player player,
-                        LevelMap map) {
+                        const LevelMap *map) {
   memset(level_mask, 0, sizeof(level_mask));
 
   Vector2 from = (Vector2) {
