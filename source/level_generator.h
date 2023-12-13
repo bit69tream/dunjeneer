@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <raylib.h>
 
@@ -25,6 +26,7 @@ typedef enum {
   TILE_NONE,
   TILE_FLOOR,
   TILE_WALL,
+
   TILE_VERTICAL_CLOSED_DOOR,
   TILE_HORIZONTAL_CLOSED_DOOR,
   TILE_VERTICAL_LOCKED_DOOR,
@@ -41,6 +43,7 @@ typedef enum {
 
 typedef struct {
   LevelTileType type;
+  ssize_t durability;
 } LevelTile;
 
 typedef enum {

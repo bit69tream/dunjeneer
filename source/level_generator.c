@@ -606,6 +606,36 @@ void generate_dungeon(LevelMap *output_map,
   construct_map(output_map, rooms, rooms_len, paths, paths_len);
 }
 
+void set_up_tile_metadata(LevelMap *output_map) {
+  for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
+    for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
+      switch ((*output_map)[yi][xi].type) {
+      case TILE_NONE:
+      case TILE_FLOOR:
+      case TILE_GROUND:
+      case TILE_HILL:
+      case TILE_WALL:
+        break;
+
+      case TILE_VERTICAL_OPENED_DOOR:
+      case TILE_HORIZONTAL_OPENED_DOOR:
+      case TILE_VERTICAL_CLOSED_DOOR:
+      case TILE_HORIZONTAL_CLOSED_DOOR:
+      case TILE_VERTICAL_LOCKED_DOOR:
+      case TILE_HORIZONTAL_LOCKED_DOOR:
+        (*output_map)[yi][xi].durability = 30;
+        break;
+
+      case TILE_MOUNTAIN:
+        (*output_map)[yi][xi].durability = 120;
+        break;
+
+      case LEVEL_TILE_COUNT: assert(false);
+      }
+    }
+  }
+}
+
 void generate_level(LevelMap *output_map,
                     LevelObject objects[OBJECTS_MAX], size_t *objects_len,
                     Point *player_location,
@@ -617,4 +647,6 @@ void generate_level(LevelMap *output_map,
   case LEVEL_SURFACE: generate_surface(output_map, objects, objects_len, player_location); return;
   case LEVEL_DUNGEON: generate_dungeon(output_map, objects, objects_len, player_location); return;
   }
+
+  set_up_tile_metadata(output_map);
 }
