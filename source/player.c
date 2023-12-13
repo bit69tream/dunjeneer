@@ -21,9 +21,7 @@ void process_player_movement(Player *player, LevelMap map) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_LEFT ||
          player->direction == DIRECTION_RIGHT) &&
-        ((map[player->location.y - 1][player->location.x] == TILE_FLOOR) ||
-         (map[player->location.y - 1][player->location.x] == TILE_VERTICAL_OPENED_DOOR) ||
-         (map[player->location.y - 1][player->location.x] == TILE_HORIZONTAL_OPENED_DOOR))) {
+        (!is_tile_solid(map[player->location.y - 1][player->location.x]))) {
       player->direction |= DIRECTION_UP;
       player->location_offset.y = (GLYPH_HEIGHT + GLYPH_GAP);
       player->location.y -= 1;
@@ -34,9 +32,7 @@ void process_player_movement(Player *player, LevelMap map) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_DOWN ||
          player->direction == DIRECTION_UP) &&
-        ((map[player->location.y][player->location.x - 1] == TILE_FLOOR) ||
-         (map[player->location.y][player->location.x - 1] == TILE_VERTICAL_OPENED_DOOR) ||
-         (map[player->location.y][player->location.x - 1] == TILE_HORIZONTAL_OPENED_DOOR))) {
+        (!is_tile_solid(map[player->location.y][player->location.x - 1]))) {
       player->direction |= DIRECTION_LEFT;
       player->location_offset.x = (GLYPH_WIDTH + GLYPH_GAP);
       player->location.x -= 1;
@@ -47,9 +43,7 @@ void process_player_movement(Player *player, LevelMap map) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_LEFT ||
          player->direction == DIRECTION_RIGHT) &&
-        ((map[player->location.y + 1][player->location.x] == TILE_FLOOR) ||
-         (map[player->location.y + 1][player->location.x] == TILE_VERTICAL_OPENED_DOOR) ||
-         (map[player->location.y + 1][player->location.x] == TILE_HORIZONTAL_OPENED_DOOR))) {
+        (!is_tile_solid(map[player->location.y + 1][player->location.x]))) {
       player->direction |= DIRECTION_DOWN;
       player->location_offset.y = -(GLYPH_HEIGHT + GLYPH_GAP);
       player->location.y += 1;
@@ -60,9 +54,7 @@ void process_player_movement(Player *player, LevelMap map) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_UP ||
          player->direction == DIRECTION_DOWN) &&
-        ((map[player->location.y][player->location.x + 1] == TILE_FLOOR) ||
-         (map[player->location.y][player->location.x + 1] == TILE_VERTICAL_OPENED_DOOR) ||
-         (map[player->location.y][player->location.x + 1] == TILE_HORIZONTAL_OPENED_DOOR))) {
+        (!is_tile_solid(map[player->location.y][player->location.x + 1]))) {
       player->direction |= DIRECTION_RIGHT;
       player->location_offset.x = -(GLYPH_WIDTH + GLYPH_GAP);
       player->location.x += 1;
@@ -247,13 +239,7 @@ Color health_to_color(Player player) {
   };
   Color alive = GREEN;
 
-  return
-    (CLITERAL(Color) {
-      .r = (unsigned char)LERP((float)dead.r, (float)alive.r, health_percentage),
-      .g = (unsigned char)LERP((float)dead.g, (float)alive.g, health_percentage),
-      .b = (unsigned char)LERP((float)dead.b, (float)alive.b, health_percentage),
-      .a = 255,
-    });
+  return color_interpolate(dead, alive, health_percentage);
 }
 
 void trace_ray(Vector2 from, Vector2 to,
@@ -309,13 +295,7 @@ void trace_ray(Vector2 from, Vector2 to,
 
     level_mask[check.y][check.x] = true;
 
-    /* TODO: make lists of see-through and solid tiles */
-    if (tile == TILE_WALL ||
-        tile == TILE_HORIZONTAL_CLOSED_DOOR ||
-        tile == TILE_HORIZONTAL_LOCKED_DOOR ||
-        tile == TILE_VERTICAL_LOCKED_DOOR ||
-        tile == TILE_VERTICAL_CLOSED_DOOR ||
-        tile == TILE_NONE) {
+    if (is_tile_solid(tile)) {
       break;
     }
   }
@@ -340,6 +320,8 @@ void trace_rays_for_fov(Player player,
       trace_ray(from, to, map);
     }
   }
+
+  level_mask[player.location.y][player.location.x] = true;
 }
 
 void init_player(Player *player) {

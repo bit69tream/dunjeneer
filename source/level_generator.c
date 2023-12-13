@@ -5,6 +5,30 @@
 #include <math.h>
 #include <stdlib.h>
 
+bool is_tile_solid(LevelTile tile) {
+  switch (tile) {
+  case TILE_FLOOR:
+  case TILE_VERTICAL_OPENED_DOOR:
+  case TILE_HORIZONTAL_OPENED_DOOR:
+  case TILE_GROUND:
+  case TILE_HILL:
+    return false;
+
+  case TILE_NONE:
+  case TILE_HORIZONTAL_CLOSED_DOOR:
+  case TILE_HORIZONTAL_LOCKED_DOOR:
+  case TILE_VERTICAL_CLOSED_DOOR:
+  case TILE_VERTICAL_LOCKED_DOOR:
+  case TILE_WALL:
+  case TILE_MOUNTAIN:
+    return true;
+
+  case LEVEL_TILE_COUNT: assert(false && "nuh uh");
+  }
+
+  assert(false);
+}
+
 bool generate_leafs(Leaf *leafs, size_t *leafs_len, size_t leaf_index) {
   float where_to_split = frand_range(0.4f, 0.6f);
 

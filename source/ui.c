@@ -171,6 +171,10 @@ Color tile_to_color(LevelTile tile) {
   case TILE_VERTICAL_OPENED_DOOR:
   case TILE_HORIZONTAL_OPENED_DOOR: return BROWN;
 
+  case TILE_GROUND: return BROWN;
+  case TILE_HILL: return DARKBROWN;
+  case TILE_MOUNTAIN: return CLITERAL(Color) {102, 57, 49, 255};
+
   case LEVEL_TILE_COUNT: assert(false && "nuh uh");
   };
 

@@ -130,6 +130,9 @@ size_t tile_to_glyph(LevelTile tile) {
   case TILE_FLOOR: return '.';
   case TILE_VERTICAL_OPENED_DOOR: return '_';
   case TILE_HORIZONTAL_OPENED_DOOR: return '|';
+  case TILE_GROUND: return '*';
+  case TILE_HILL: return ';';
+  case TILE_MOUNTAIN: return 'M';
   case LEVEL_TILE_COUNT: assert(false && "bruh");
   }
 

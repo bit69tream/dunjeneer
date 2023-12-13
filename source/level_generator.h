@@ -31,6 +31,11 @@ typedef enum {
   TILE_HORIZONTAL_LOCKED_DOOR,
   TILE_VERTICAL_OPENED_DOOR,
   TILE_HORIZONTAL_OPENED_DOOR,
+
+  TILE_GROUND,
+  TILE_HILL,
+  TILE_MOUNTAIN,
+
   LEVEL_TILE_COUNT,
 } LevelTile;
 
@@ -60,3 +65,6 @@ typedef LevelTile LevelMap[LEVEL_HEIGHT][LEVEL_WIDTH];
 #define OBJECTS_MAX 128
 
 void generate_level(LevelMap *output_map, LevelObject objects[OBJECTS_MAX], size_t *objects_len, Point *player_location);
+
+
+bool is_tile_solid(LevelTile tile);
