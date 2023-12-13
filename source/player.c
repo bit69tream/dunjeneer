@@ -21,6 +21,7 @@ void process_player_movement(Player *player, LevelMap map) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_LEFT ||
          player->direction == DIRECTION_RIGHT) &&
+        (player->location.y != 0) &&
         (!is_tile_solid(map[player->location.y - 1][player->location.x]))) {
       player->direction |= DIRECTION_UP;
       player->location_offset.y = (GLYPH_HEIGHT + GLYPH_GAP);
@@ -32,6 +33,7 @@ void process_player_movement(Player *player, LevelMap map) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_DOWN ||
          player->direction == DIRECTION_UP) &&
+        (player->location.x != 0) &&
         (!is_tile_solid(map[player->location.y][player->location.x - 1]))) {
       player->direction |= DIRECTION_LEFT;
       player->location_offset.x = (GLYPH_WIDTH + GLYPH_GAP);
@@ -43,6 +45,7 @@ void process_player_movement(Player *player, LevelMap map) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_LEFT ||
          player->direction == DIRECTION_RIGHT) &&
+        (player->location.y != LEVEL_HEIGHT - 1) &&
         (!is_tile_solid(map[player->location.y + 1][player->location.x]))) {
       player->direction |= DIRECTION_DOWN;
       player->location_offset.y = -(GLYPH_HEIGHT + GLYPH_GAP);
@@ -54,6 +57,7 @@ void process_player_movement(Player *player, LevelMap map) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_UP ||
          player->direction == DIRECTION_DOWN) &&
+        (player->location.x != LEVEL_WIDTH - 1) &&
         (!is_tile_solid(map[player->location.y][player->location.x + 1]))) {
       player->direction |= DIRECTION_RIGHT;
       player->location_offset.x = -(GLYPH_WIDTH + GLYPH_GAP);
@@ -91,8 +95,8 @@ void process_player_movement(Player *player, LevelMap map) {
     }
   }
 
-  player->location.x = CLAMP(1, LEVEL_WIDTH - 2, player->location.x);
-  player->location.y = CLAMP(1, LEVEL_HEIGHT - 2, player->location.y);
+  player->location.x = CLAMP(0, LEVEL_WIDTH - 1, player->location.x);
+  player->location.y = CLAMP(0, LEVEL_HEIGHT - 1, player->location.y);
 }
 
 bool can_interact(Player *player, Point tile_location, LevelTile tile) {
