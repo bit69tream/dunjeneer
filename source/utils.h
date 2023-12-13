@@ -1,5 +1,7 @@
 #pragma once
 
+#include <raylib.h>
+
 #define PUSH(arr, len, cap, dest_index)         \
   do {                                          \
     assert((*(len)) < (cap));                   \
@@ -23,3 +25,6 @@
 #define CLAMPF(start, end, value) (fminf(fmaxf(value, start), end))
 
 #define LERP(a, b, t) (a + (t * (b - a)))
+
+
+Color color_interpolate(Color a, Color b, float t);
