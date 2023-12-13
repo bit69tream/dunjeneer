@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <sys/types.h>
 
 bool is_tile_solid(LevelTileType tile) {
   switch (tile) {
@@ -558,15 +559,27 @@ void generate_surface(LevelMap *output_map,
     }
   }
 
-  size_t px = (size_t)rand_range(1, LEVEL_WIDTH - 1);
-  size_t py = (size_t)rand_range(1, LEVEL_HEIGHT - 1);
+  size_t px = (size_t)rand_range(0, LEVEL_WIDTH - 1);
+  size_t py = (size_t)rand_range(0, LEVEL_HEIGHT - 1);
   while (is_tile_solid(output_map->map[py][px].type)) {
-    px = (size_t)rand_range(1, LEVEL_WIDTH - 1);
-    py = (size_t)rand_range(1, LEVEL_HEIGHT - 1);
+    px = (size_t)rand_range(0, LEVEL_WIDTH - 1);
+    py = (size_t)rand_range(0, LEVEL_HEIGHT - 1);
   }
 
   player_location->x = px;
   player_location->y = py;
+
+#define ELEVATOR_DOWN_RANGE 25
+
+  ssize_t ex = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
+  ssize_t ey = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
+
+  while (is_tile_solid(output_map->map[(ssize_t)py + ey][(ssize_t)px + ex].type)) {
+    ex = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
+    ey = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
+  }
+
+  output_map->map[(ssize_t)py + ey][(ssize_t)px + ex].type = TILE_ELEVATOR_DOWN;
 
   UnloadImage(noise);
 }
@@ -648,11 +661,11 @@ void set_up_tile_metadata(LevelMap *output_map) {
       case TILE_HORIZONTAL_CLOSED_DOOR:
       case TILE_VERTICAL_LOCKED_DOOR:
       case TILE_HORIZONTAL_LOCKED_DOOR:
-        output_map->map[yi][xi].durability = 15;
+        output_map->map[yi][xi].durability = 2;
         break;
 
       case TILE_MOUNTAIN:
-        output_map->map[yi][xi].durability = 60;
+        output_map->map[yi][xi].durability = 15;
         break;
 
       case LEVEL_TILE_COUNT: assert(false);
