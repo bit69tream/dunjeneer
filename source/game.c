@@ -21,8 +21,7 @@
 #include <stdio.h>
 
 int main(void) {
-  /* time_t seed = time(0); */
-  time_t seed = 1702474312;
+  time_t seed = time(0);
   srand((unsigned int)seed);
   srand48(seed);
 

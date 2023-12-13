@@ -554,7 +554,7 @@ void init_audio(void) {
   drill = LoadSoundFromWave(w);
   UnloadWave(w);
 
-  SetSoundVolume(drill, 0.3f);
+  SetSoundVolume(drill, 0.2f);
 
 #if DISABLE_NOISE != 1
   noise_stream = LoadAudioStream(44100, 16, 1);
