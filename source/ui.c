@@ -390,6 +390,30 @@ void render_drill(Player player) {
   };
 
   DrawRectangleRec(position, WHITE);
+
+  size_t drill_glyph = ' ';
+
+  if (player.drill_offset.y == -1) {
+    drill_glyph = '^';
+  } else if (player.drill_offset.y == 1) {
+    drill_glyph = 'v';
+  } else if (player.drill_offset.x == -1) {
+    drill_glyph = '<';
+  } else if (player.drill_offset.x == 1) {
+    drill_glyph = '>';
+  }
+
+  DrawTexturePro(font,
+                 glyphs[drill_glyph],
+                 (Rectangle) {
+                   .x = X_TO_SCREEN(dx, float),
+                   .y = Y_TO_SCREEN(dy, float),
+                   .width = GLYPH_WIDTH,
+                   .height = GLYPH_HEIGHT,
+                 },
+                 (Vector2) {0, 0},
+                 0,
+                 BLACK);
 }
 
 void render(const LevelMap *map,
