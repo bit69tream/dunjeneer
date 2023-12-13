@@ -559,27 +559,29 @@ void generate_surface(LevelMap *output_map,
     }
   }
 
-  size_t px = (size_t)rand_range(0, LEVEL_WIDTH - 1);
-  size_t py = (size_t)rand_range(0, LEVEL_HEIGHT - 1);
+  ssize_t px = rand_range(0, LEVEL_WIDTH - 1);
+  ssize_t py = rand_range(0, LEVEL_HEIGHT - 1);
   while (is_tile_solid(output_map->map[py][px].type)) {
-    px = (size_t)rand_range(0, LEVEL_WIDTH - 1);
-    py = (size_t)rand_range(0, LEVEL_HEIGHT - 1);
+    px = rand_range(0, LEVEL_WIDTH - 1);
+    py = rand_range(0, LEVEL_HEIGHT - 1);
   }
 
-  player_location->x = px;
-  player_location->y = py;
+  player_location->x = (size_t)px;
+  player_location->y = (size_t)py;
 
 #define ELEVATOR_DOWN_RANGE 25
 
   ssize_t ex = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
   ssize_t ey = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
 
-  while (is_tile_solid(output_map->map[(ssize_t)py + ey][(ssize_t)px + ex].type)) {
+  while (((px + ex) >= 0 && (px + ex) < (LEVEL_WIDTH - 1)) &&
+         ((py + ey) >= 0 && (py + ey) < (LEVEL_HEIGHT - 1)) &&
+         is_tile_solid(output_map->map[py + ey][px + ex].type)) {
     ex = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
     ey = rand_range(0, ELEVATOR_DOWN_RANGE * 2) - ELEVATOR_DOWN_RANGE;
   }
 
-  output_map->map[(ssize_t)py + ey][(ssize_t)px + ex].type = TILE_ELEVATOR_DOWN;
+  output_map->map[py + ey][px + ex].type = TILE_ELEVATOR_DOWN;
 
   UnloadImage(noise);
 }
