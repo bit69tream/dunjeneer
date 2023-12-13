@@ -197,10 +197,26 @@ void apply_action(Player *player, LevelMap *map, Point location, Action action) 
 void process_mouse(Player *player, LevelMap *map) {
   player->is_drilling = is_action_key_down(KEYBIND_ACTION_FIRE);
 
+  Point mouse_position = mouse_in_world();
+
+  if (player->is_drilling) {
+    ssize_t dx = ((ssize_t)player->location.x + player->drill_offset.x);
+    ssize_t dy = ((ssize_t)player->location.y + player->drill_offset.y);
+
+    if ((dx >= 0 && dx < LEVEL_WIDTH) &&
+        (dy >= 0 && dy < LEVEL_HEIGHT) &&
+        can_be_drilled((*map)[dy][dx].type)) {
+      (*map)[dy][dx].durability -= 1;
+      if ((*map)[dy][dx].durability <= 0) {
+        (*map)[dy][dx].type = TILE_FLOOR;
+      }
+      (*map)[dy][dx].durability = CLAMP(0, DURABILITY_MAX, (*map)[dy][dx].durability);
+    }
+
+  }
+
   if (is_action_key_pressed(KEYBIND_ACTION_ACTION_MENU)) {
     assert(ui_state.type == UI_STATE_NONE);
-
-    Point mouse_position = mouse_in_world();
 
     LevelTile tile = (*map)[mouse_position.y][mouse_position.x];
 

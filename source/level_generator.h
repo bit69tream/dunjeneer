@@ -78,9 +78,13 @@ typedef LevelTile LevelMap[LEVEL_HEIGHT][LEVEL_WIDTH];
 
 #define OBJECTS_MAX 128
 
+#define DURABILITY_MAX (60 * 10)
+
 void generate_level(LevelMap *output_map,
                     LevelObject objects[OBJECTS_MAX], size_t *objects_len,
                     Point *player_location,
                     LevelType type);
 
 bool is_tile_solid(LevelTileType tile);
+
+bool can_be_drilled(LevelTileType tile);

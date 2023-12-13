@@ -606,6 +606,31 @@ void generate_dungeon(LevelMap *output_map,
   construct_map(output_map, rooms, rooms_len, paths, paths_len);
 }
 
+bool can_be_drilled(LevelTileType tile) {
+  switch (tile) {
+  case TILE_NONE:
+  case TILE_FLOOR:
+  case TILE_GROUND:
+  case TILE_HILL:
+  case TILE_WALL:
+    return false;
+
+  case TILE_VERTICAL_OPENED_DOOR:
+  case TILE_HORIZONTAL_OPENED_DOOR:
+  case TILE_VERTICAL_CLOSED_DOOR:
+  case TILE_HORIZONTAL_CLOSED_DOOR:
+  case TILE_VERTICAL_LOCKED_DOOR:
+  case TILE_HORIZONTAL_LOCKED_DOOR:
+
+  case TILE_MOUNTAIN:
+    return true;
+
+  case LEVEL_TILE_COUNT: assert(false);
+  }
+
+  assert(false);
+}
+
 void set_up_tile_metadata(LevelMap *output_map) {
   for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
     for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
