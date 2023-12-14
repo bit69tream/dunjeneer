@@ -569,6 +569,13 @@ void play_audio(void) {
 }
 
 void play_drill(void) {
+  static bool played = false;
+  if (played) {
+    played = false;
+    return;
+  }
+  played = true;
+
   PlaySound(drill);
 }
 

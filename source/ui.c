@@ -459,6 +459,7 @@ void render_thing_name_under_mouse(const LevelMap *map,
 
   #undef X
   #undef Y
+  #undef ZOOM
 }
 
 void render(const LevelMap *map,
