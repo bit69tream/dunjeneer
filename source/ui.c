@@ -98,11 +98,9 @@ Vector2I action_menu_offsets[ACTION_COUNT] = {
   [ACTION_NONE] = {0, 0},
 
   [ACTION_OPEN] = {-1, -1},
-  [ACTION_CLOSE] = {-0, -1},
-  [ACTION_KICK] = {1, -1},
+  [ACTION_CLOSE] = {+1, -1},
 
   [ACTION_PICK_UP] = {-1, 1},
-  [ACTION_EAT] = {0, 1},
   [ACTION_CLIMB] = {1, 1},
 };
 static_assert(SIZE_OF(action_menu_offsets) == ACTION_COUNT);

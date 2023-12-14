@@ -143,35 +143,12 @@ void action_close(Player *player, LevelMap *map, Point location) {
   }
 }
 
-void action_kick(Player *player, LevelMap *map, Point location) {
-  (void) player;
-
-  LevelTile *tile = &TILE_FROM_LOCATION(map->map, location);
-
-  switch (tile->type) {
-  case TILE_HORIZONTAL_CLOSED_DOOR:
-  case TILE_VERTICAL_CLOSED_DOOR:
-  case TILE_HORIZONTAL_LOCKED_DOOR:
-  case TILE_VERTICAL_LOCKED_DOOR:
-  case TILE_HORIZONTAL_OPENED_DOOR:
-  case TILE_VERTICAL_OPENED_DOOR: {
-    /* TODO: keep track of how damaged a tile is and decide stuff based on that */
-    if (roll_dice(3)) {
-       tile->type = TILE_FLOOR;
-    }
-  } break;
-  default: break;               /* TODO: game need some way to show messages to player */
-  }
-}
-
 void apply_action(Player *player, LevelMap *map, Point location, Action action) {
   switch (action) {
   case ACTION_NONE: assert(false && "cannot apply ACTION_NONE");
   case ACTION_OPEN: action_open(player, map, location); return;
   case ACTION_CLOSE: action_close(player, map, location); return;
-  case ACTION_KICK: action_kick(player, map, location); return;
   case ACTION_PICK_UP: assert(false && "TODO");
-  case ACTION_EAT: assert(false && "TODO");
   case ACTION_CLIMB: assert(false && "TODO");
   case ACTION_COUNT: assert(false && "( ._.)");
   }

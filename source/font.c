@@ -155,9 +155,7 @@ size_t action_to_glyph(Action action) {
   case ACTION_NONE: assert(false && "no glyph for you");
   case ACTION_OPEN: return 'O';
   case ACTION_CLOSE: return 'C';
-  case ACTION_KICK: return 'K';
   case ACTION_PICK_UP: return 'P';
-  case ACTION_EAT: return 'E';
   case ACTION_CLIMB: return 'c';
   case ACTION_COUNT: assert(false && "illegal");
   }
