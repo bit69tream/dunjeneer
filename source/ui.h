@@ -33,3 +33,4 @@ void setup_action_menu(Point anchor);
 bool is_window_big_enough();
 
 void render_text_centered(const char *text, Vector2 position, Color color, float zoom);
+void render_text(const char *text, Vector2 position, Color color, float zoom);

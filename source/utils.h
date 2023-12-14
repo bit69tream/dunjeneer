@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdlib.h>
+
 #include <raylib.h>
 
 #define PUSH(arr, len, cap, dest_index)         \
@@ -26,5 +28,5 @@
 
 #define LERP(a, b, t) (a + (t * (b - a)))
 
-
 Color color_interpolate(Color a, Color b, float t);
+size_t text_width(size_t text_length);

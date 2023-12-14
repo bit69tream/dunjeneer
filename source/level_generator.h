@@ -93,3 +93,7 @@ void generate_level(LevelMap *output_map,
 bool is_tile_solid(LevelTileType tile);
 
 bool can_be_drilled(LevelTileType tile);
+
+bool is_tile_floor(LevelTileType tile);
+
+const char *tile_type_name(LevelTileType type);

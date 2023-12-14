@@ -704,3 +704,61 @@ void generate_level(LevelMap *output_map,
   output_map->floor = level_floor(type);
   output_map->type = type;
 }
+
+bool is_tile_floor(LevelTileType tile) {
+  switch (tile) {
+  case TILE_NONE:
+  case LEVEL_TILE_COUNT: assert(false && "nah");
+
+  case TILE_FLOOR:
+  case TILE_HILL:
+  case TILE_GROUND:
+    return true;
+
+  case TILE_ELEVATOR_UP:
+  case TILE_ELEVATOR_DOWN:
+
+  case TILE_WALL:
+
+  case TILE_HORIZONTAL_CLOSED_DOOR:
+  case TILE_HORIZONTAL_LOCKED_DOOR:
+  case TILE_HORIZONTAL_OPENED_DOOR:
+  case TILE_VERTICAL_CLOSED_DOOR:
+  case TILE_VERTICAL_LOCKED_DOOR:
+  case TILE_VERTICAL_OPENED_DOOR:
+
+  case TILE_MOUNTAIN:
+    return false;
+  }
+
+  assert(false);
+}
+
+
+const char *tile_type_name(LevelTileType type) {
+  switch (type) {
+  case TILE_NONE:
+  case LEVEL_TILE_COUNT: assert(false && "nah");
+
+  case TILE_FLOOR: return "Floor";
+
+  case TILE_WALL: return "Wall";
+
+  case TILE_ELEVATOR_DOWN: return "Elevator Down";
+  case TILE_ELEVATOR_UP: return "Elevator Up";
+
+  case TILE_VERTICAL_CLOSED_DOOR:
+  case TILE_HORIZONTAL_CLOSED_DOOR:
+  case TILE_VERTICAL_LOCKED_DOOR:
+  case TILE_HORIZONTAL_LOCKED_DOOR:
+  case TILE_VERTICAL_OPENED_DOOR:
+  case TILE_HORIZONTAL_OPENED_DOOR:
+    return "Door";
+
+  case TILE_GROUND: return "Ground";
+  case TILE_HILL: return "Hill";
+  case TILE_MOUNTAIN: return "Mountain";
+  }
+
+  assert(false);
+}

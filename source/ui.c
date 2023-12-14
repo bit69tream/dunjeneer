@@ -416,6 +416,51 @@ void render_drill(Player player) {
                  BLACK);
 }
 
+void render_thing_name_under_mouse(const LevelMap *map,
+                                   LevelObject objects[OBJECTS_MAX], size_t objects_len) {
+  /* TODO: render object name */
+  (void) objects;
+  (void) objects_len;
+
+  Point pos = mouse_in_world();
+
+  if (!level_mask[pos.y][pos.x]) {
+    return;
+  }
+
+  LevelTileType tile = map->map[pos.y][pos.x].type;
+
+  if (tile == TILE_NONE || is_tile_floor(tile)) {
+    return;
+  }
+
+  #define ZOOM 2
+  const char *text = tile_type_name(tile);
+  size_t text_len = strlen(text);
+  float actual_text_width = (float)text_width(text_len) * ZOOM;
+
+  #define X 5
+  #define Y 5
+
+  DrawRectangleRec((Rectangle) {
+      .x = X,
+      .y = Y,
+      .width = actual_text_width + (GLYPH_GAP * 2),
+      .height = GLYPH_HEIGHT + (GLYPH_GAP * 2),
+    },
+    BLACK);
+
+  render_text(text, (Vector2) {
+      .x = X + GLYPH_GAP,
+      .y = Y + GLYPH_GAP
+    },
+    WHITE,
+    ZOOM);
+
+  #undef X
+  #undef Y
+}
+
 void render(const LevelMap *map,
             LevelObject objects[OBJECTS_MAX], size_t objects_len,
             Player player) {
@@ -481,7 +526,7 @@ void render(const LevelMap *map,
 
     } EndMode2D();
 
-    DrawFPS(0, 0);
+    render_thing_name_under_mouse(map, objects, objects_len);
   } EndDrawing();
 
   shader_time += GetFrameTime();
@@ -527,10 +572,10 @@ bool is_window_big_enough() {
 
 void render_text_centered(const char *text, Vector2 position, Color color, float zoom) {
   size_t text_len = strlen(text);
-  float text_width = (float)((text_len * GLYPH_WIDTH) + ((text_len - 1) * GLYPH_GAP)) * zoom;
+  float actual_text_width = (float)text_width(text_len) * zoom;
 
   Vector2 actual_position = {
-    .x = position.x - (text_width / 2.0f),
+    .x = position.x - (actual_text_width / 2.0f),
     .y = position.y - (GLYPH_HEIGHT / 2.0f),
   };
 
@@ -548,5 +593,24 @@ void render_text_centered(const char *text, Vector2 position, Color color, float
                    color);
 
     actual_position.x += (GLYPH_WIDTH + GLYPH_GAP) * zoom;
+  }
+}
+
+void render_text(const char *text, Vector2 position, Color color, float zoom) {
+  size_t text_len = strlen(text);
+
+  for (size_t i = 0; i < text_len; i++) {
+    DrawTexturePro(font,
+                   glyphs[(size_t)text[i]],
+                   (Rectangle) {
+                     .x = position.x,
+                     .y = position.y,
+                     .width = GLYPH_WIDTH * zoom,
+                     .height = GLYPH_HEIGHT * zoom,
+                   },
+                   (Vector2) {0, 0},
+                   0,
+                   color);
+    position.x += (GLYPH_WIDTH + GLYPH_GAP) * zoom;
   }
 }
