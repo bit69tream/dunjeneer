@@ -532,7 +532,7 @@ void generate_surface(Level *output_map,
                       Point *player_location) {
   Image noise = GenImagePerlinNoise(LEVEL_WIDTH, LEVEL_HEIGHT,
                                     0, 0,
-                                    3.0f);
+                                    (float)drand48() * 10);
 
   for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
     for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
