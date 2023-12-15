@@ -123,19 +123,27 @@ size_t tile_to_glyph(LevelTileType tile) {
   switch (tile) {
   case TILE_ELEVATOR_UP: return '<';
   case TILE_ELEVATOR_DOWN: return '>';
+
   case TILE_NONE: return ' ';
+
   case TILE_WALL: return '#';
+
   case TILE_VERTICAL_LOCKED_DOOR:
   case TILE_VERTICAL_CLOSED_DOOR: return '|';
+
   case TILE_HORIZONTAL_LOCKED_DOOR:
   case TILE_HORIZONTAL_CLOSED_DOOR: return '-';
+
   case TILE_FLOOR: return '.';
+
   case TILE_VERTICAL_OPENED_DOOR: return '_';
   case TILE_HORIZONTAL_OPENED_DOOR: return '|';
+
   case TILE_GROUND: return '*';
   case TILE_HILL: return ';';
   case TILE_ROCK: return '%';
   case TILE_HARD_ROCK: return '%';
+
   case LEVEL_TILE_COUNT: assert(false && "bruh");
   }
 
