@@ -115,6 +115,14 @@ int main(void) {
     process_mouse(&player, &levels[current_level], &next_level, LEVELS_MAX);
     trace_rays_for_fov(player, &levels[current_level]);
 
+    if (IsKeyDown(KEY_X)) {
+      for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
+        for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
+          levels[current_level].map[yi][xi].is_visible = true;
+        }
+      }
+    }
+
     render(&levels[current_level], player);
 
     if (player.is_drilling) {
