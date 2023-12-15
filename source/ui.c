@@ -420,7 +420,7 @@ void render_thing_name_under_mouse(const Level *map) {
   #define ZOOM 2
   const char *text = tile_type_name(tile);
   size_t text_len = strlen(text);
-  float actual_text_width = (float)text_width(text_len) * ZOOM;
+  float actual_text_width = (float)text_width(text_len);
 
   #define X 5
   #define Y 5
@@ -428,14 +428,14 @@ void render_thing_name_under_mouse(const Level *map) {
   DrawRectangleRec((Rectangle) {
       .x = X,
       .y = Y,
-      .width = actual_text_width + (GLYPH_GAP * 2),
-      .height = GLYPH_HEIGHT + (GLYPH_GAP * 2),
+      .width = (actual_text_width + (GLYPH_GAP * 2)) * ZOOM,
+      .height = (GLYPH_HEIGHT + (GLYPH_GAP * 2)) * ZOOM,
     },
     BLACK);
 
   render_text(text, (Vector2) {
-      .x = X + GLYPH_GAP,
-      .y = Y + GLYPH_GAP
+      .x = X + GLYPH_GAP * ZOOM,
+      .y = Y + GLYPH_GAP * ZOOM
     },
     WHITE,
     ZOOM);
