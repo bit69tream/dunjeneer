@@ -530,30 +530,38 @@ void update_mouse() {
                                                 .y = config.mouse_sensitivity,
                                               }),
                               mouse_position);
-  mouse_position = Vector2Clamp(mouse_position,
-                                (Vector2) {0, 0},
-                                (Vector2) {(float)GetScreenWidth(),
-                                           (float)GetScreenHeight()});
+
+  Vector2 top_left_cap = Vector2Zero();
+  Vector2 bottom_right_cap = (Vector2) {
+    .x = (float)GetScreenWidth(),
+    .y = (float)GetScreenHeight()
+  };
+
+  if (ui_state.type == UI_STATE_ACTION_MENU) {
+    Vector2 top_left = (Vector2) {
+      .x = (float)(ui_state.action_tile_location.x - 1) * (GLYPH_WIDTH + 1),
+      .y = (float)(ui_state.action_tile_location.y - 1) * (GLYPH_HEIGHT + 1),
+    };
+
+    Vector2 bottom_right = (Vector2) {
+      .x = (float)(ui_state.action_tile_location.x + 1) * (GLYPH_WIDTH + 1),
+      .y = (float)(ui_state.action_tile_location.y + 1) * (GLYPH_HEIGHT + 1),
+    };
+
+    top_left_cap = GetWorldToScreen2D(top_left, camera);
+    bottom_right_cap = GetWorldToScreen2D(bottom_right, camera);
+  }
+
+  mouse_position = Vector2Clamp(mouse_position, top_left_cap, bottom_right_cap);
 }
 
 Point mouse_in_world(void) {
   Vector2 mouse_on_screen = GetScreenToWorld2D(mouse_position, camera);
 
-  Point pos = (Point) {
+  return (Point) {
     .x = (size_t)((mouse_on_screen.x) / (GLYPH_WIDTH + 1)),
     .y = (size_t)((mouse_on_screen.y) / (GLYPH_HEIGHT + 1)),
   };
-
-  if (ui_state.type == UI_STATE_ACTION_MENU) {
-    pos.x = CLAMP(ui_state.action_tile_location.x - 1,
-                  ui_state.action_tile_location.x + 1,
-                  pos.x);
-    pos.y = CLAMP(ui_state.action_tile_location.y - 1,
-                  ui_state.action_tile_location.y + 1,
-                  pos.y);
-  }
-
-  return pos;
 }
 
 
