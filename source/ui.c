@@ -175,7 +175,11 @@ Color tile_to_background(LevelTileType tile) {
   case TILE_GROUND:
   case TILE_HILL:
   case TILE_ROCK:
+  case TILE_GREY_ROCK:
   case TILE_HARD_ROCK:
+
+  case TILE_ROCK_GRAVEL:
+  case TILE_GREY_ROCK_GRAVEL:
 
     return BLACK;
 
@@ -203,8 +207,14 @@ Color tile_to_color(LevelTileType tile) {
 
   case TILE_GROUND: return BROWN;
   case TILE_HILL: return DARKBROWN;
+
+  case TILE_ROCK_GRAVEL: return CLITERAL(Color) {102 - 10, 57 - 10, 49 - 10, 255};
   case TILE_ROCK: return CLITERAL(Color) {102, 57, 49, 255};
+
   case TILE_HARD_ROCK: return CLITERAL(Color) {131, 67, 51, 255};
+
+  case TILE_GREY_ROCK_GRAVEL: return DARKGRAY;
+  case TILE_GREY_ROCK: return GRAY;
 
   case LEVEL_TILE_COUNT: assert(false && "nuh uh");
   };

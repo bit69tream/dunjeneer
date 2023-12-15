@@ -39,7 +39,12 @@ typedef enum {
 
   TILE_GROUND,
   TILE_HILL,
+
   TILE_ROCK,
+  TILE_ROCK_GRAVEL,
+  TILE_GREY_ROCK,
+  TILE_GREY_ROCK_GRAVEL,
+
   TILE_HARD_ROCK,
 
   LEVEL_TILE_COUNT,
@@ -71,7 +76,6 @@ typedef struct {
 typedef struct {
   LevelType type;
   bool is_generated;
-  LevelTileType floor;
   LevelTile map[LEVEL_HEIGHT][LEVEL_WIDTH];
 } Level;
 
@@ -98,3 +102,5 @@ bool is_tile_floor(LevelTileType tile);
 const char *tile_type_name(LevelTileType type);
 
 const char *object_type_name(LevelObjectType type);
+
+LevelTileType what_is_left_after_destruction(LevelTileType tile);

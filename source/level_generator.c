@@ -18,6 +18,8 @@ bool is_tile_solid(LevelTileType tile) {
   case TILE_HILL:
   case TILE_ELEVATOR_UP:
   case TILE_ELEVATOR_DOWN:
+  case TILE_ROCK_GRAVEL:
+  case TILE_GREY_ROCK_GRAVEL:
     return false;
 
   case TILE_NONE:
@@ -28,6 +30,7 @@ bool is_tile_solid(LevelTileType tile) {
   case TILE_WALL:
   case TILE_ROCK:
   case TILE_HARD_ROCK:
+  case TILE_GREY_ROCK:
     return true;
 
   case LEVEL_TILE_COUNT: assert(false && "nuh uh");
@@ -542,8 +545,12 @@ void generate_surface(Level *output_map,
         t = TILE_GROUND;
       } else if (a < 120) {
         t = TILE_HILL;
-      } else {
+      } else if (a < 140) {
+        t = TILE_GREY_ROCK;
+      } else if (a < 180) {
         t = TILE_ROCK;
+      } else {
+        t = TILE_HARD_ROCK;
       }
       output_map->map[yi][xi].type = t;
     }
@@ -636,6 +643,9 @@ bool can_be_drilled(LevelTileType tile) {
   case TILE_ELEVATOR_UP:
 
   case TILE_HARD_ROCK:
+
+  case TILE_ROCK_GRAVEL:
+  case TILE_GREY_ROCK_GRAVEL:
     return false;
 
   case TILE_VERTICAL_OPENED_DOOR:
@@ -646,6 +656,7 @@ bool can_be_drilled(LevelTileType tile) {
   case TILE_HORIZONTAL_LOCKED_DOOR:
 
   case TILE_ROCK:
+  case TILE_GREY_ROCK:
     return true;
 
   case LEVEL_TILE_COUNT: assert(false);
@@ -666,6 +677,8 @@ void set_up_tile_metadata(Level *output_map) {
       case TILE_ELEVATOR_UP:
       case TILE_ELEVATOR_DOWN:
       case TILE_HARD_ROCK:
+      case TILE_ROCK_GRAVEL:
+      case TILE_GREY_ROCK_GRAVEL:
         break;
 
       case TILE_VERTICAL_OPENED_DOOR:
@@ -680,23 +693,14 @@ void set_up_tile_metadata(Level *output_map) {
       case TILE_ROCK:
         output_map->map[yi][xi].durability = 15;
         break;
+      case TILE_GREY_ROCK:
+        output_map->map[yi][xi].durability = 5;
+        break;
 
       case LEVEL_TILE_COUNT: assert(false);
       }
     }
   }
-}
-
-LevelTileType level_floor(LevelType type) {
-  switch (type) {
-  case LEVEL_NONE:
-  case LEVEL_TYPE_COUNT: assert(false);
-
-  case LEVEL_DUNGEON: return TILE_FLOOR;
-  case LEVEL_SURFACE: return TILE_GROUND;
-  }
-
-  assert(false);
 }
 
 void generate_level(Level *output_map,
@@ -711,7 +715,6 @@ void generate_level(Level *output_map,
   }
 
   set_up_tile_metadata(output_map);
-  output_map->floor = level_floor(type);
   output_map->type = type;
   output_map->is_generated = true;
 }
@@ -724,6 +727,9 @@ bool is_tile_floor(LevelTileType tile) {
   case TILE_FLOOR:
   case TILE_HILL:
   case TILE_GROUND:
+
+  case TILE_ROCK_GRAVEL:
+  case TILE_GREY_ROCK_GRAVEL:
     return true;
 
   case TILE_ELEVATOR_UP:
@@ -739,6 +745,7 @@ bool is_tile_floor(LevelTileType tile) {
   case TILE_VERTICAL_OPENED_DOOR:
 
   case TILE_ROCK:
+  case TILE_GREY_ROCK:
   case TILE_HARD_ROCK:
     return false;
   }
@@ -771,6 +778,10 @@ const char *tile_type_name(LevelTileType type) {
   case TILE_HILL: return "Hill";
   case TILE_ROCK: return "Rock";
   case TILE_HARD_ROCK: return "Hard rock";
+  case TILE_GREY_ROCK: return "Grey rock";
+
+  case TILE_ROCK_GRAVEL:
+  case TILE_GREY_ROCK_GRAVEL: return "Gravel";
   }
 
   assert(false);
@@ -780,6 +791,41 @@ const char *object_type_name(LevelObjectType type) {
   switch (type) {
   case OBJECT_NONE:
   case LEVEL_OBJECT_COUNT: assert(false && "no way");
+  }
+
+  assert(false);
+}
+
+/* TODO: add an ability to also leave objects */
+LevelTileType what_is_left_after_destruction(LevelTileType tile) {
+  switch (tile) {
+  case TILE_NONE:
+  case LEVEL_TILE_COUNT: assert(false && "nah");
+
+  case TILE_FLOOR: assert(false && "unexpected");
+
+  case TILE_WALL: return TILE_FLOOR;
+
+  case TILE_ELEVATOR_DOWN: assert(false && "unbelievable");
+  case TILE_ELEVATOR_UP: assert(false && "unbelievable");
+
+  case TILE_VERTICAL_CLOSED_DOOR:
+  case TILE_HORIZONTAL_CLOSED_DOOR:
+  case TILE_VERTICAL_LOCKED_DOOR:
+  case TILE_HORIZONTAL_LOCKED_DOOR:
+  case TILE_VERTICAL_OPENED_DOOR:
+  case TILE_HORIZONTAL_OPENED_DOOR:
+    return TILE_FLOOR;
+
+  case TILE_GROUND: assert(false && "cannot be possible");
+  case TILE_HILL: assert(false && "nope");
+  case TILE_ROCK: return TILE_ROCK_GRAVEL;
+  case TILE_HARD_ROCK: assert(false && "cheater");
+  case TILE_GREY_ROCK: return TILE_GREY_ROCK_GRAVEL;
+
+  case TILE_ROCK_GRAVEL:
+  case TILE_GREY_ROCK_GRAVEL:
+    assert(false && "nuh uh");
   }
 
   assert(false);

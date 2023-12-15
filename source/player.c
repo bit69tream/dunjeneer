@@ -198,7 +198,7 @@ void process_mouse(Player *player, Level *map, size_t *current_level, size_t lev
         can_be_drilled(map->map[dy][dx].type)) {
       map->map[dy][dx].durability -= 1;
       if (map->map[dy][dx].durability <= 0) {
-        map->map[dy][dx].type = map->floor;
+        map->map[dy][dx].type = what_is_left_after_destruction(map->map[dy][dx].type);
       }
       map->map[dy][dx].durability = CLAMP(0, DURABILITY_MAX, map->map[dy][dx].durability);
     }
