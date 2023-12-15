@@ -539,10 +539,21 @@ void update_mouse() {
 Point mouse_in_world(void) {
   Vector2 mouse_on_screen = GetScreenToWorld2D(mouse_position, camera);
 
-  return (Point) {
+  Point pos = (Point) {
     .x = (size_t)((mouse_on_screen.x) / (GLYPH_WIDTH + 1)),
     .y = (size_t)((mouse_on_screen.y) / (GLYPH_HEIGHT + 1)),
   };
+
+  if (ui_state.type == UI_STATE_ACTION_MENU) {
+    pos.x = CLAMP(ui_state.action_tile_location.x - 1,
+                  ui_state.action_tile_location.x + 1,
+                  pos.x);
+    pos.y = CLAMP(ui_state.action_tile_location.y - 1,
+                  ui_state.action_tile_location.y + 1,
+                  pos.y);
+  }
+
+  return pos;
 }
 
 
