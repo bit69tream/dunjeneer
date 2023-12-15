@@ -4,6 +4,7 @@
 #include "utils.h"
 
 #include <math.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <sys/types.h>
@@ -26,6 +27,7 @@ bool is_tile_solid(LevelTileType tile) {
   case TILE_VERTICAL_LOCKED_DOOR:
   case TILE_WALL:
   case TILE_MOUNTAIN:
+  case TILE_HARD_MOUNTAIN:
     return true;
 
   case LEVEL_TILE_COUNT: assert(false && "nuh uh");
@@ -524,6 +526,8 @@ void construct_map(Level *output_map,
   }
 }
 
+/* TODO: generate hard mountain across the borders */
+
 void generate_surface(Level *output_map,
                       Point *player_location) {
   Image noise = GenImagePerlinNoise(LEVEL_WIDTH, LEVEL_HEIGHT,
@@ -544,6 +548,28 @@ void generate_surface(Level *output_map,
         t = TILE_MOUNTAIN;
       }
       output_map->map[yi][xi].type = t;
+    }
+  }
+
+  for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
+    size_t x = (size_t)((5 * (sin((float)yi / 4) / 4 + 1)) - 3);
+    output_map->map[yi][x].type = TILE_HARD_MOUNTAIN;
+    output_map->map[yi][LEVEL_WIDTH - 1 - x].type = TILE_HARD_MOUNTAIN;
+
+    for (size_t xi = 0; xi < x; xi++) {
+    output_map->map[yi][xi].type = TILE_HARD_MOUNTAIN;
+    output_map->map[yi][LEVEL_WIDTH - 1 - xi].type = TILE_HARD_MOUNTAIN;
+    }
+  }
+
+  for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
+    size_t y = (size_t)((5 * (cos((float)xi / 4) / 3 + 1)) - 3);
+    output_map->map[y][xi].type = TILE_HARD_MOUNTAIN;
+    output_map->map[LEVEL_HEIGHT - 1 - y][xi].type = TILE_HARD_MOUNTAIN;
+
+    for (size_t yi = 0; yi < y; yi++) {
+    output_map->map[yi][xi].type = TILE_HARD_MOUNTAIN;
+    output_map->map[LEVEL_HEIGHT - 1 - yi][xi].type = TILE_HARD_MOUNTAIN;
     }
   }
 
@@ -610,6 +636,8 @@ bool can_be_drilled(LevelTileType tile) {
   case TILE_WALL:
   case TILE_ELEVATOR_DOWN:
   case TILE_ELEVATOR_UP:
+
+  case TILE_HARD_MOUNTAIN:
     return false;
 
   case TILE_VERTICAL_OPENED_DOOR:
@@ -639,6 +667,7 @@ void set_up_tile_metadata(Level *output_map) {
       case TILE_WALL:
       case TILE_ELEVATOR_UP:
       case TILE_ELEVATOR_DOWN:
+      case TILE_HARD_MOUNTAIN:
         break;
 
       case TILE_VERTICAL_OPENED_DOOR:
@@ -712,6 +741,7 @@ bool is_tile_floor(LevelTileType tile) {
   case TILE_VERTICAL_OPENED_DOOR:
 
   case TILE_MOUNTAIN:
+  case TILE_HARD_MOUNTAIN:
     return false;
   }
 
@@ -742,6 +772,7 @@ const char *tile_type_name(LevelTileType type) {
   case TILE_GROUND: return "Ground";
   case TILE_HILL: return "Hill";
   case TILE_MOUNTAIN: return "Mountain";
+  case TILE_HARD_MOUNTAIN: return "Hard mountain";
   }
 
   assert(false);

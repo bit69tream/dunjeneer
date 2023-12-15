@@ -40,6 +40,7 @@ typedef enum {
   TILE_GROUND,
   TILE_HILL,
   TILE_MOUNTAIN,
+  TILE_HARD_MOUNTAIN,
 
   LEVEL_TILE_COUNT,
 } LevelTileType;
