@@ -301,13 +301,27 @@ void render_action_menu(void) {
   static float alpha = 0.0f;
   float desired_alpha = 1.0f;
 
+  static float alpha2 = 0.0f;
+  float desired_alpha2 = 0.2f;
+
   if (ui_state.type == UI_STATE_ACTION_MENU) {
     desired_alpha = 1.0f;
+    desired_alpha2 = 0.2f;
   } else {
     desired_alpha = 0.0f;
+    desired_alpha2 = 0.0f;
   }
 
   alpha = LERP(alpha, desired_alpha, 0.2f);
+  alpha2 = LERP(alpha2, desired_alpha2, 0.2f);
+
+  DrawRectangle(0, 0, X_TO_SCREEN(LEVEL_WIDTH, int), Y_TO_SCREEN(LEVEL_HEIGHT, int),
+                CLITERAL(Color) {
+                  .r = 0,
+                  .g = 0,
+                  .b = 0,
+                  .a = (unsigned char)(alpha2 * 255)
+                });
 
   for (size_t i = 0; i < SIZE_OF(action_menu_offsets); i++) {
     if (i == ACTION_NONE) {
@@ -494,7 +508,9 @@ void render(const Level *map,
 
     } EndMode2D();
 
-    render_thing_name_under_mouse(map);
+    if (ui_state.type != UI_STATE_ACTION_MENU) {
+      render_thing_name_under_mouse(map);
+    }
   } EndDrawing();
 
   shader_time += GetFrameTime();
