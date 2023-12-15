@@ -69,6 +69,7 @@ typedef struct {
 
 typedef struct {
   LevelType type;
+  bool is_generated;
   LevelTileType floor;
   LevelTile map[LEVEL_HEIGHT][LEVEL_WIDTH];
 } Level;

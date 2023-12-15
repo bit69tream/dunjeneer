@@ -141,18 +141,46 @@ void action_close(Player *player, Level *map, Point location) {
   }
 }
 
-void apply_action(Player *player, Level *map, Point location, Action action) {
+void action_climb(Player *player,
+                  Level *map, Point location,
+                  size_t *current_level, size_t levels_max) {
+  (void) player;
+
+  LevelTile *tile = &TILE_FROM_LOCATION(map->map, location);
+
+  switch (tile->type) {
+  case TILE_ELEVATOR_DOWN: {
+    *current_level += 1;
+    if (*current_level >= (levels_max - 1)) {
+      *current_level = levels_max - 1;
+    }
+  } break;
+  case TILE_ELEVATOR_UP: {
+    if (*current_level == 0) {
+      assert(false && "there isn't supposed to be an elevator up on the surface");
+    }
+
+    *current_level -= 1;
+  } break;
+  default: return;
+  }
+}
+
+void apply_action(Player *player,
+                  Level *map, Point location,
+                  Action action,
+                  size_t *current_level, size_t levels_max) {
   switch (action) {
   case ACTION_NONE: assert(false && "cannot apply ACTION_NONE");
   case ACTION_OPEN: action_open(player, map, location); return;
   case ACTION_CLOSE: action_close(player, map, location); return;
   case ACTION_PICK_UP: assert(false && "TODO");
-  case ACTION_CLIMB: assert(false && "TODO");
+  case ACTION_CLIMB: action_climb(player, map, location, current_level, levels_max); return;
   case ACTION_COUNT: assert(false && "( ._.)");
   }
 }
 
-void process_mouse(Player *player, Level *map) {
+void process_mouse(Player *player, Level *map, size_t *current_level, size_t levels_max) {
   player->is_drilling = is_action_key_down(KEYBIND_ACTION_FIRE);
 
   Point mouse_position = mouse_in_world();
@@ -192,7 +220,10 @@ void process_mouse(Player *player, Level *map) {
 
     if (action != ACTION_NONE) {
       /* TODO: play some sound */
-      apply_action(player, map, ui_state.action_tile_location, action);
+      apply_action(player,
+                   map, ui_state.action_tile_location,
+                   action,
+                   current_level, levels_max);
     }
 
     ui_state.type = UI_STATE_NONE;

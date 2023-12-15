@@ -31,7 +31,7 @@ typedef enum {
 #define PLAYER_MAX_VIEW_DISTANCE 20
 
 void process_player_movement(Player *player, const Level *map);
-void process_mouse(Player *player, Level *map);
+void process_mouse(Player *player, Level *map, size_t *current_level, size_t levels_max);
 
 Color health_to_color(Player player);
 

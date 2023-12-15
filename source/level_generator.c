@@ -591,7 +591,7 @@ void generate_dungeon(Level *output_map,
 
   Point loc;
   RANDOM_POINT_INSIDE_OF_THE_ROOM(&loc, rooms[i]);
-  output_map->map[loc.y][loc.x].type = TILE_ELEVATOR_UP;
+  output_map->map[loc.y][loc.x].type = TILE_ELEVATOR_DOWN;
 
   size_t player_room = (size_t)rand_range(0, (int)rooms_len - 1);
 
@@ -686,6 +686,7 @@ void generate_level(Level *output_map,
   set_up_tile_metadata(output_map);
   output_map->floor = level_floor(type);
   output_map->type = type;
+  output_map->is_generated = true;
 }
 
 bool is_tile_floor(LevelTileType tile) {

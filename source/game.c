@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <time.h>
 #include <math.h>
+#include <string.h>
 
 #include <raylib.h>
 
@@ -20,6 +21,8 @@
 
 #include <stdio.h>
 
+#define LEVELS_MAX 10
+
 int main(void) {
   time_t seed = time(0);
   srand((unsigned int)seed);
@@ -31,12 +34,15 @@ int main(void) {
     default_config();
   }
 
-  static Level map = {0};
+  static Level levels[LEVELS_MAX] = {0};
+  size_t current_level = 0;
+
+  memset(levels, 0, sizeof(levels));
 
   Player player = {0};
   init_player(&player);
 
-  generate_level(&map, &player.location, LEVEL_SURFACE);
+  generate_level(&levels[0], &player.location, LEVEL_SURFACE);
 
   /* TODO: https://www.squidi.net/three/entry.php?id=83 */
 
@@ -46,6 +52,8 @@ int main(void) {
   play_audio();
 
   bool is_cursor_enabled = false;
+
+  size_t next_level = current_level;
   while (!WindowShouldClose()) {
     if (!is_window_big_enough()) {
       if (!is_cursor_enabled) {
@@ -79,12 +87,35 @@ int main(void) {
       update_mouse();
     }
 
-    process_player_movement(&player, &map);
-    update_drill_position(&player);
-    process_mouse(&player, &map);
-    trace_rays_for_fov(player, &map);
+    if (next_level != current_level) {
+      if (!levels[next_level].is_generated) {
+        generate_level(&levels[next_level], &player.location, LEVEL_DUNGEON);
+      } else {
+        LevelTileType elevator =
+          next_level < current_level
+          ? TILE_ELEVATOR_DOWN
+          : TILE_ELEVATOR_UP;
 
-    render(&map, player);
+        for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
+          for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
+            if (levels[next_level].map[yi][xi].type == elevator) {
+              player.location.x = xi;
+              player.location.y = yi;
+              break;
+            }
+          }
+        }
+
+        current_level = next_level;
+      }
+    }
+
+    process_player_movement(&player, &levels[current_level]);
+    update_drill_position(&player);
+    process_mouse(&player, &levels[current_level], &next_level, LEVELS_MAX);
+    trace_rays_for_fov(player, &levels[current_level]);
+
+    render(&levels[current_level], player);
 
     if (player.is_drilling) {
       play_drill();
