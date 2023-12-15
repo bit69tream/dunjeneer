@@ -44,20 +44,10 @@ typedef enum {
   LEVEL_TILE_COUNT,
 } LevelTileType;
 
-typedef struct {
-  LevelTileType type;
-  ssize_t durability;
-} LevelTile;
-
 typedef enum {
   OBJECT_NONE,
   LEVEL_OBJECT_COUNT,
 } LevelObjectType;
-
-typedef struct {
-  LevelObjectType type;
-  Point location;
-} LevelObject;
 
 typedef enum {
   LEVEL_NONE,
@@ -66,6 +56,14 @@ typedef enum {
   LEVEL_TYPE_COUNT,
 } LevelType;
 
+typedef struct {
+  LevelTileType type;
+  ssize_t durability;
+  bool is_visible;
+  /* NOTE: maybe allow for multiple objects on the same tile idk?? */
+  LevelObjectType object;
+} LevelTile;
+
 #define LEVEL_WIDTH 200
 #define LEVEL_HEIGHT 80
 
@@ -73,7 +71,7 @@ typedef struct {
   LevelType type;
   LevelTileType floor;
   LevelTile map[LEVEL_HEIGHT][LEVEL_WIDTH];
-} LevelMap;
+} Level;
 
 #define LEAFS_MAX 128
 #define MIN_LEAF_SIZE 20
@@ -85,8 +83,7 @@ typedef struct {
 
 #define DURABILITY_MAX (60 * 10)
 
-void generate_level(LevelMap *output_map,
-                    LevelObject objects[OBJECTS_MAX], size_t *objects_len,
+void generate_level(Level *output_map,
                     Point *player_location,
                     LevelType type);
 
@@ -97,3 +94,5 @@ bool can_be_drilled(LevelTileType tile);
 bool is_tile_floor(LevelTileType tile);
 
 const char *tile_type_name(LevelTileType type);
+
+const char *object_type_name(LevelObjectType type);

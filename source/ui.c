@@ -234,10 +234,10 @@ void render_noise(int width, int height) {
   } EndShaderMode();
 }
 
-void render_map(const LevelMap *map) {
+void render_map(const Level *map) {
   for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
     for (size_t x = 0; x < LEVEL_WIDTH; x++) {
-      if (!level_mask[y][x]) {
+      if (!map->map[y][x].is_visible) {
         continue;
       }
 
@@ -270,30 +270,6 @@ void render_map(const LevelMap *map) {
                      0,
                      tile_to_color(tile.type));
     }
-  }
-}
-
-void render_objects(LevelObject objects[OBJECTS_MAX], size_t objects_len) {
-  for (size_t i = 0; i < objects_len; i++) {
-    if (!level_mask[objects[i].location.y][objects[i].location.x]) continue;
-
-    DrawRectangle(X_TO_SCREEN(objects[i].location.x, int),
-                  Y_TO_SCREEN(objects[i].location.y, int),
-                  GLYPH_WIDTH,
-                  GLYPH_HEIGHT,
-                  BLACK);
-
-    DrawTexturePro(font,
-                   glyphs[object_type_to_glyph(objects[i].type)],
-                   (Rectangle) {
-                     .x = X_TO_SCREEN(objects[i].location.x, float),
-                     .y = Y_TO_SCREEN(objects[i].location.y, float),
-                     .width = GLYPH_WIDTH,
-                     .height = GLYPH_HEIGHT,
-                   },
-                   (Vector2) {0, 0},
-                   0,
-                   object_type_to_color(objects[i].type));
   }
 }
 
@@ -414,15 +390,10 @@ void render_drill(Player player) {
                  BLACK);
 }
 
-void render_thing_name_under_mouse(const LevelMap *map,
-                                   LevelObject objects[OBJECTS_MAX], size_t objects_len) {
-  /* TODO: render object name */
-  (void) objects;
-  (void) objects_len;
-
+void render_thing_name_under_mouse(const Level *map) {
   Point pos = mouse_in_world();
 
-  if (!level_mask[pos.y][pos.x]) {
+  if (!map->map[pos.y][pos.x].is_visible) {
     return;
   }
 
@@ -460,8 +431,7 @@ void render_thing_name_under_mouse(const LevelMap *map,
   #undef ZOOM
 }
 
-void render(const LevelMap *map,
-            LevelObject objects[OBJECTS_MAX], size_t objects_len,
+void render(const Level *map,
             Player player) {
   float player_screen_x = X_TO_SCREEN(player.location.x, float) + (GLYPH_WIDTH / 2.0f);
   float player_screen_y = Y_TO_SCREEN(player.location.y, float) + (GLYPH_HEIGHT / 2.0f);
@@ -488,7 +458,6 @@ void render(const LevelMap *map,
   BeginTextureMode(world); {
     render_noise(texture_width, texture_height);
     render_map(map);
-    render_objects(objects, objects_len);
     render_drill(player);
     render_player(player);
 
@@ -525,7 +494,7 @@ void render(const LevelMap *map,
 
     } EndMode2D();
 
-    render_thing_name_under_mouse(map, objects, objects_len);
+    render_thing_name_under_mouse(map);
   } EndDrawing();
 
   shader_time += GetFrameTime();

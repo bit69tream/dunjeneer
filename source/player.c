@@ -14,9 +14,7 @@
 #include <string.h>
 #include <math.h>
 
-LevelMapVisibleMask level_mask;
-
-void process_player_movement(Player *player, const LevelMap *map) {
+void process_player_movement(Player *player, const Level *map) {
   if (is_action_key_down(KEYBIND_ACTION_MOVE_UP)) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_LEFT ||
@@ -119,7 +117,7 @@ Action get_action_from_menu(void) {
 
 #define TILE_FROM_LOCATION(map, location) ((map)[(location).y][(location.x)])
 
-void action_open(Player *player, LevelMap *map, Point location) {
+void action_open(Player *player, Level *map, Point location) {
   (void) player;
 
   LevelTile *tile = &TILE_FROM_LOCATION(map->map, location);
@@ -131,7 +129,7 @@ void action_open(Player *player, LevelMap *map, Point location) {
   }
 }
 
-void action_close(Player *player, LevelMap *map, Point location) {
+void action_close(Player *player, Level *map, Point location) {
   (void) player;
 
   LevelTile *tile = &TILE_FROM_LOCATION(map->map, location);
@@ -143,7 +141,7 @@ void action_close(Player *player, LevelMap *map, Point location) {
   }
 }
 
-void apply_action(Player *player, LevelMap *map, Point location, Action action) {
+void apply_action(Player *player, Level *map, Point location, Action action) {
   switch (action) {
   case ACTION_NONE: assert(false && "cannot apply ACTION_NONE");
   case ACTION_OPEN: action_open(player, map, location); return;
@@ -154,7 +152,7 @@ void apply_action(Player *player, LevelMap *map, Point location, Action action) 
   }
 }
 
-void process_mouse(Player *player, LevelMap *map) {
+void process_mouse(Player *player, Level *map) {
   player->is_drilling = is_action_key_down(KEYBIND_ACTION_FIRE);
 
   Point mouse_position = mouse_in_world();
@@ -178,7 +176,7 @@ void process_mouse(Player *player, LevelMap *map) {
   if (is_action_key_pressed(KEYBIND_ACTION_ACTION_MENU)) {
     assert(ui_state.type == UI_STATE_NONE);
 
-    if (!level_mask[mouse_position.y][mouse_position.x]) {
+    if (!map->map[mouse_position.y][mouse_position.x].is_visible) {
       return;
     }
 
@@ -216,7 +214,7 @@ Color health_to_color(Player player) {
 }
 
 void trace_ray(Vector2 from, Vector2 to,
-               const LevelMap *map) {
+               Level *map) {
   Vector2 dir = Vector2Normalize(Vector2Subtract(to, from));
 
   Vector2 unit_step_size = (Vector2) {
@@ -266,7 +264,7 @@ void trace_ray(Vector2 from, Vector2 to,
 
     LevelTile tile = map->map[check.y][check.x];
 
-    level_mask[check.y][check.x] = true;
+    map->map[check.y][check.x].is_visible = true;
 
     if (is_tile_solid(tile.type)) {
       break;
@@ -275,8 +273,12 @@ void trace_ray(Vector2 from, Vector2 to,
 }
 
 void trace_rays_for_fov(Player player,
-                        const LevelMap *map) {
-  memset(level_mask, 0, sizeof(level_mask));
+                        Level *map) {
+  for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
+    for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
+      map->map[yi][xi].is_visible = false;
+    }
+  }
 
   Vector2 from = (Vector2) {
     .x = (float)player.location.x + 0.5f,
@@ -294,7 +296,7 @@ void trace_rays_for_fov(Player player,
     }
   }
 
-  level_mask[player.location.y][player.location.x] = true;
+  map->map[player.location.y][player.location.x].is_visible = true;
 }
 
 void init_player(Player *player) {

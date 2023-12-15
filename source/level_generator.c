@@ -411,7 +411,7 @@ void generate_paths_between_rooms(Room rooms[ROOMS_MAX], size_t rooms_len,
   }
 }
 
-void put_horizontal_path(LevelMap *output_map,
+void put_horizontal_path(Level *output_map,
                          size_t x_start,
                          size_t x_end,
                          size_t y) {
@@ -430,7 +430,7 @@ void put_horizontal_path(LevelMap *output_map,
   }
 }
 
-void put_vertical_path(LevelMap *output_map,
+void put_vertical_path(Level *output_map,
                        size_t y_start,
                        size_t y_end,
                        size_t x) {
@@ -449,7 +449,7 @@ void put_vertical_path(LevelMap *output_map,
   }
 }
 
-void construct_map(LevelMap *output_map,
+void construct_map(Level *output_map,
                              Room rooms[ROOMS_MAX], size_t rooms_len,
                              Path paths[PATHS_MAX], size_t paths_len) {
   (void)paths;
@@ -524,20 +524,8 @@ void construct_map(LevelMap *output_map,
   }
 }
 
-void generate_objects(LevelObject objects[OBJECTS_MAX], size_t *objects_len,
-                      Room rooms[ROOMS_MAX], size_t rooms_len) {
-  (void) objects;
-  (void) objects_len;
-  (void) rooms;
-  (void) rooms_len;
-}
-
-void generate_surface(LevelMap *output_map,
-                      LevelObject objects[OBJECTS_MAX], size_t *objects_len,
+void generate_surface(Level *output_map,
                       Point *player_location) {
-  (void) objects;
-  (void) objects_len;
-
   Image noise = GenImagePerlinNoise(LEVEL_WIDTH, LEVEL_HEIGHT,
                                     0, 0,
                                     3.0f);
@@ -586,8 +574,7 @@ void generate_surface(LevelMap *output_map,
   UnloadImage(noise);
 }
 
-void generate_dungeon(LevelMap *output_map,
-                      LevelObject objects[OBJECTS_MAX], size_t *objects_len,
+void generate_dungeon(Level *output_map,
                       Point *player_location) {
   static Room rooms[ROOMS_MAX] = {0};
   size_t rooms_len = 0;
@@ -597,9 +584,6 @@ void generate_dungeon(LevelMap *output_map,
 
   generate_rooms(rooms, &rooms_len);
   generate_paths_between_rooms(rooms, rooms_len, paths, &paths_len);
-
-  generate_objects(objects, objects_len,
-                   rooms, rooms_len);
 
   construct_map(output_map, rooms, rooms_len, paths, paths_len);
 
@@ -644,7 +628,7 @@ bool can_be_drilled(LevelTileType tile) {
   assert(false);
 }
 
-void set_up_tile_metadata(LevelMap *output_map) {
+void set_up_tile_metadata(Level *output_map) {
   for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
     for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
       switch (output_map->map[yi][xi].type) {
@@ -688,16 +672,15 @@ LevelTileType level_floor(LevelType type) {
   assert(false);
 }
 
-void generate_level(LevelMap *output_map,
-                    LevelObject objects[OBJECTS_MAX], size_t *objects_len,
+void generate_level(Level *output_map,
                     Point *player_location,
                     LevelType type) {
   switch (type) {
   case LEVEL_NONE:
   case LEVEL_TYPE_COUNT: assert(false && ":<");
 
-  case LEVEL_SURFACE: generate_surface(output_map, objects, objects_len, player_location); break;
-  case LEVEL_DUNGEON: generate_dungeon(output_map, objects, objects_len, player_location); break;
+  case LEVEL_SURFACE: generate_surface(output_map, player_location); break;
+  case LEVEL_DUNGEON: generate_dungeon(output_map, player_location); break;
   }
 
   set_up_tile_metadata(output_map);
@@ -758,6 +741,15 @@ const char *tile_type_name(LevelTileType type) {
   case TILE_GROUND: return "Ground";
   case TILE_HILL: return "Hill";
   case TILE_MOUNTAIN: return "Mountain";
+  }
+
+  assert(false);
+}
+
+const char *object_type_name(LevelObjectType type) {
+  switch (type) {
+  case OBJECT_NONE:
+  case LEVEL_OBJECT_COUNT: assert(false && "no way");
   }
 
   assert(false);

@@ -31,15 +31,12 @@ int main(void) {
     default_config();
   }
 
-  static LevelMap map = {0};
-
-  static LevelObject objects[OBJECTS_MAX] = {0};
-  size_t objects_len = 0;
+  static Level map = {0};
 
   Player player = {0};
   init_player(&player);
 
-  generate_level(&map, objects, &objects_len, &player.location, LEVEL_SURFACE);
+  generate_level(&map, &player.location, LEVEL_SURFACE);
 
   /* TODO: https://www.squidi.net/three/entry.php?id=83 */
 
@@ -87,7 +84,7 @@ int main(void) {
     process_mouse(&player, &map);
     trace_rays_for_fov(player, &map);
 
-    render(&map, objects, objects_len, player);
+    render(&map, player);
 
     if (player.is_drilling) {
       play_drill();

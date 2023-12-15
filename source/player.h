@@ -30,17 +30,13 @@ typedef enum {
 
 #define PLAYER_MAX_VIEW_DISTANCE 20
 
-typedef bool LevelMapVisibleMask[LEVEL_HEIGHT][LEVEL_WIDTH];
-extern LevelMapVisibleMask level_mask;
-
-void process_player_movement(Player *player, const LevelMap *map);
-void process_mouse(Player *player, LevelMap *map);
+void process_player_movement(Player *player, const Level *map);
+void process_mouse(Player *player, Level *map);
 
 Color health_to_color(Player player);
 
 void init_player(Player *player);
 
-void trace_rays_for_fov(Player player,
-                        const LevelMap *map);
+void trace_rays_for_fov(Player player, Level *map);
 
 void update_drill_position(Player *player);
