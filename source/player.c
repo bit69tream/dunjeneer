@@ -15,6 +15,10 @@
 #include <math.h>
 
 void process_player_movement(Player *player, const Level *map) {
+  if (ui_state.type != UI_STATE_NONE) {
+    return;
+  }
+
   if (is_action_key_down(KEYBIND_ACTION_MOVE_UP)) {
     if ((player->direction == DIRECTION_NONE ||
          player->direction == DIRECTION_LEFT ||
