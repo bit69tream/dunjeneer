@@ -26,8 +26,8 @@ bool is_tile_solid(LevelTileType tile) {
   case TILE_VERTICAL_CLOSED_DOOR:
   case TILE_VERTICAL_LOCKED_DOOR:
   case TILE_WALL:
-  case TILE_MOUNTAIN:
-  case TILE_HARD_MOUNTAIN:
+  case TILE_ROCK:
+  case TILE_HARD_ROCK:
     return true;
 
   case LEVEL_TILE_COUNT: assert(false && "nuh uh");
@@ -526,7 +526,7 @@ void construct_map(Level *output_map,
   }
 }
 
-/* TODO: generate hard mountain across the borders */
+/* TODO: generate hard rock across the borders */
 
 void generate_surface(Level *output_map,
                       Point *player_location) {
@@ -545,7 +545,7 @@ void generate_surface(Level *output_map,
       } else if (a < 120) {
         t = TILE_HILL;
       } else {
-        t = TILE_MOUNTAIN;
+        t = TILE_ROCK;
       }
       output_map->map[yi][xi].type = t;
     }
@@ -553,23 +553,23 @@ void generate_surface(Level *output_map,
 
   for (size_t yi = 0; yi < LEVEL_HEIGHT; yi++) {
     size_t x = (size_t)((5 * (sin((float)yi / 4) / 4 + 1)) - 3);
-    output_map->map[yi][x].type = TILE_HARD_MOUNTAIN;
-    output_map->map[yi][LEVEL_WIDTH - 1 - x].type = TILE_HARD_MOUNTAIN;
+    output_map->map[yi][x].type = TILE_HARD_ROCK;
+    output_map->map[yi][LEVEL_WIDTH - 1 - x].type = TILE_HARD_ROCK;
 
     for (size_t xi = 0; xi < x; xi++) {
-    output_map->map[yi][xi].type = TILE_HARD_MOUNTAIN;
-    output_map->map[yi][LEVEL_WIDTH - 1 - xi].type = TILE_HARD_MOUNTAIN;
+    output_map->map[yi][xi].type = TILE_HARD_ROCK;
+    output_map->map[yi][LEVEL_WIDTH - 1 - xi].type = TILE_HARD_ROCK;
     }
   }
 
   for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
     size_t y = (size_t)((5 * (cos((float)xi / 4) / 3 + 1)) - 3);
-    output_map->map[y][xi].type = TILE_HARD_MOUNTAIN;
-    output_map->map[LEVEL_HEIGHT - 1 - y][xi].type = TILE_HARD_MOUNTAIN;
+    output_map->map[y][xi].type = TILE_HARD_ROCK;
+    output_map->map[LEVEL_HEIGHT - 1 - y][xi].type = TILE_HARD_ROCK;
 
     for (size_t yi = 0; yi < y; yi++) {
-    output_map->map[yi][xi].type = TILE_HARD_MOUNTAIN;
-    output_map->map[LEVEL_HEIGHT - 1 - yi][xi].type = TILE_HARD_MOUNTAIN;
+    output_map->map[yi][xi].type = TILE_HARD_ROCK;
+    output_map->map[LEVEL_HEIGHT - 1 - yi][xi].type = TILE_HARD_ROCK;
     }
   }
 
@@ -637,7 +637,7 @@ bool can_be_drilled(LevelTileType tile) {
   case TILE_ELEVATOR_DOWN:
   case TILE_ELEVATOR_UP:
 
-  case TILE_HARD_MOUNTAIN:
+  case TILE_HARD_ROCK:
     return false;
 
   case TILE_VERTICAL_OPENED_DOOR:
@@ -647,7 +647,7 @@ bool can_be_drilled(LevelTileType tile) {
   case TILE_VERTICAL_LOCKED_DOOR:
   case TILE_HORIZONTAL_LOCKED_DOOR:
 
-  case TILE_MOUNTAIN:
+  case TILE_ROCK:
     return true;
 
   case LEVEL_TILE_COUNT: assert(false);
@@ -667,7 +667,7 @@ void set_up_tile_metadata(Level *output_map) {
       case TILE_WALL:
       case TILE_ELEVATOR_UP:
       case TILE_ELEVATOR_DOWN:
-      case TILE_HARD_MOUNTAIN:
+      case TILE_HARD_ROCK:
         break;
 
       case TILE_VERTICAL_OPENED_DOOR:
@@ -679,7 +679,7 @@ void set_up_tile_metadata(Level *output_map) {
         output_map->map[yi][xi].durability = 2;
         break;
 
-      case TILE_MOUNTAIN:
+      case TILE_ROCK:
         output_map->map[yi][xi].durability = 15;
         break;
 
@@ -740,8 +740,8 @@ bool is_tile_floor(LevelTileType tile) {
   case TILE_VERTICAL_LOCKED_DOOR:
   case TILE_VERTICAL_OPENED_DOOR:
 
-  case TILE_MOUNTAIN:
-  case TILE_HARD_MOUNTAIN:
+  case TILE_ROCK:
+  case TILE_HARD_ROCK:
     return false;
   }
 
@@ -771,8 +771,8 @@ const char *tile_type_name(LevelTileType type) {
 
   case TILE_GROUND: return "Ground";
   case TILE_HILL: return "Hill";
-  case TILE_MOUNTAIN: return "Mountain";
-  case TILE_HARD_MOUNTAIN: return "Hard mountain";
+  case TILE_ROCK: return "Rock";
+  case TILE_HARD_ROCK: return "Hard rock";
   }
 
   assert(false);
