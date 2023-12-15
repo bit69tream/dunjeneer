@@ -526,8 +526,6 @@ void construct_map(Level *output_map,
   }
 }
 
-/* TODO: generate hard rock across the borders */
-
 void generate_surface(Level *output_map,
                       Point *player_location) {
   Image noise = GenImagePerlinNoise(LEVEL_WIDTH, LEVEL_HEIGHT,

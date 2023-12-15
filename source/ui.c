@@ -107,8 +107,6 @@ static_assert(SIZE_OF(action_menu_offsets) == ACTION_COUNT);
 
 void init_rendering(void) {
   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-  /* TODO: adapt ui to the window size, tell user that window is too small when it is */
-  /* TODO: calculate the minimal window size when the ui is ready */
   InitWindow(800, 600, "dunjeneer");
   SetExitKey(KEY_NULL);
 
