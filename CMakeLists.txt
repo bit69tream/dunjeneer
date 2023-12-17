@@ -35,7 +35,9 @@ add_executable(${PROJECT_NAME}
   source/ui.c
   source/audio.c
   source/config.c
-  source/utils.c)
+  source/utils.c
+  source/generated/charmap_oldschool_white_png.c
+  source/generated/drill_wav.c)
 set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 

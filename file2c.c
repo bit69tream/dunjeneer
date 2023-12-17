@@ -14,20 +14,23 @@ int main(int argc, char** argv) {
   FILE *fp = fopen(argv[1], "rb");
 
   char *array_name = basename(argv[1]);
-  printf("static const unsigned char ");
+  printf("const unsigned char ");
+
+  char c_name[256] = {0};
+  memset(c_name, 0, sizeof(c_name));
 
   for (size_t i = 0; i < strlen(array_name); i++) {
     if (!isalnum(array_name[i])) {
-      putchar('_');
+      c_name[i] = '_';
     } else {
-      putchar(array_name[i]);
+      c_name[i] = array_name[i];
     }
   }
 
-  printf("[] = {\n  ");
+  printf("%s[] = {\n  ", c_name);
 
   #define VALUES_PER_LINE 20
-  int counter = 0;
+  unsigned long counter = 0;
 
   int byte = EOF;
   while ((byte = fgetc(fp)) != EOF) {
@@ -48,6 +51,8 @@ int main(int argc, char** argv) {
   }
 
   printf("};\n");
+
+  printf("const unsigned long %s_size = %lu;\n", c_name, counter);
 
   fclose(fp);
 
