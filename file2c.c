@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
 
   printf("%s[] = {\n  ", c_name);
 
-  #define VALUES_PER_LINE 20
+#define VALUES_PER_LINE 20
   unsigned long counter = 0;
 
   int byte = EOF;

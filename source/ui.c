@@ -1,7 +1,6 @@
 #include "rand.h"
 #include <stddef.h>
 #include <sys/types.h>
-#define UI_STATE
 
 #include "ui.h"
 #include "font.h"
