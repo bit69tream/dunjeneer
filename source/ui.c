@@ -128,8 +128,8 @@ void init_rendering(void) {
   cursor_shader_resolution = GetShaderLocation(cursor_shader, "resolution");
 
   Vector2 resolution = {
-    .x = (float)LEVEL_WIDTH,
-    .y = (float)LEVEL_HEIGHT
+    .x = (float)world.texture.width,
+    .y = (float)world.texture.height,
   };
   SetShaderValue(cursor_shader, cursor_shader_resolution, &resolution, SHADER_UNIFORM_VEC2);
 
@@ -138,8 +138,12 @@ void init_rendering(void) {
   noise_shader = LoadShaderFromMemory(NULL, noise_shader_source);
   assert(IsShaderReady(noise_shader));
 
+  Vector2 world_resolution = {
+    .x = (float)LEVEL_WIDTH,
+    .y = (float)LEVEL_HEIGHT
+  };
   noise_shader_resolution = GetShaderLocation(noise_shader, "resolution");
-  SetShaderValue(noise_shader, noise_shader_resolution, &resolution, SHADER_UNIFORM_VEC2);
+  SetShaderValue(noise_shader, noise_shader_resolution, &world_resolution, SHADER_UNIFORM_VEC2);
 
   noise_shader_time = GetShaderLocation(noise_shader, "time");
 
