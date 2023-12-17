@@ -151,6 +151,7 @@ void init_rendering(void) {
 void cleanup_rendering(void) {
   EnableCursor();
   UnloadShader(cursor_shader);
+  UnloadShader(noise_shader);
   UnloadRenderTexture(world);
   UnloadTexture(font);
 }
