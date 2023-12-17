@@ -325,7 +325,9 @@ void render_action_menu(void) {
   alpha = LERP(alpha, desired_alpha, 0.2f);
   alpha2 = LERP(alpha2, desired_alpha2, 0.2f);
 
-  DrawRectangle(0, 0, X_TO_SCREEN(LEVEL_WIDTH, int), Y_TO_SCREEN(LEVEL_HEIGHT, int),
+  DrawRectangle(0, 0,
+                X_TO_SCREEN(LEVEL_WIDTH, int),
+                Y_TO_SCREEN(LEVEL_HEIGHT, int),
                 CLITERAL(Color) {
                   .r = 0,
                   .g = 0,
@@ -352,7 +354,7 @@ void render_action_menu(void) {
       },
       (Vector2) {0, 0},
       0,
-      CLITERAL(Color) {0, 0, 0, (unsigned char)(255 * alpha)});
+      CLITERAL(Color) {0, 121, 241, (unsigned char)(255 * alpha)});
 
     DrawTexturePro(font,
                    glyphs[action_to_glyph((Action)(i))],
@@ -364,7 +366,7 @@ void render_action_menu(void) {
                    },
                    (Vector2) {0, 0},
                    0,
-                   CLITERAL(Color) {0, 121, 241, (unsigned char)(255 * alpha)});
+                   CLITERAL(Color) {0, 0, 0, (unsigned char)(255 * alpha)});
   }
 }
 
