@@ -128,8 +128,8 @@ void init_rendering(void) {
   cursor_shader_resolution = GetShaderLocation(cursor_shader, "resolution");
 
   Vector2 resolution = {
-    .x = (float)world.texture.width,
-    .y = (float)world.texture.height,
+    .x = (float)LEVEL_WIDTH,
+    .y = (float)LEVEL_HEIGHT
   };
   SetShaderValue(cursor_shader, cursor_shader_resolution, &resolution, SHADER_UNIFORM_VEC2);
 
