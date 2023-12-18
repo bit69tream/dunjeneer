@@ -8,6 +8,7 @@
 #include "ui.h"
 #include "utils.h"
 #include "config.h"
+#include "audio.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -185,7 +186,17 @@ void apply_action(Player *player,
 }
 
 void process_mouse(Player *player, Level *map, size_t *current_level, size_t levels_max) {
-  player->is_drilling = is_action_key_down(KEYBIND_ACTION_FIRE);
+  bool is_drilling = is_action_key_down(KEYBIND_ACTION_FIRE);
+
+  if (is_drilling == true && player->is_drilling == false) {
+    start_drilling();
+  }
+
+  if (is_drilling == false && player->is_drilling == true) {
+    stop_drilling();
+  }
+
+  player->is_drilling = is_drilling;
 
   Point mouse_position = mouse_in_world();
 

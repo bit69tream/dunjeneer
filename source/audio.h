@@ -7,4 +7,6 @@ void cleanup_audio(void);
 
 void play_audio(void);
 
-void play_drill(void);
+void start_drilling(void);
+void update_drill(void);
+void stop_drilling(void);

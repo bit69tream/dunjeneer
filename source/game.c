@@ -129,9 +129,7 @@ int main(void) {
 
     render(&levels[current_level], player);
 
-    if (player.is_drilling) {
-      play_drill();
-    }
+    update_drill();
   }
 
   cleanup_rendering();

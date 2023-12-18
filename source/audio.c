@@ -27,7 +27,7 @@ void noise_callback(void *buffer, unsigned int frames) {
 static AudioStream noise_stream;
 #endif
 
-static Sound drill;
+static Music drill;
 
 /* TODO: better drill sounds */
 extern const unsigned char drill_wav[];
@@ -36,11 +36,9 @@ extern const unsigned long drill_wav_size;
 void init_audio(void) {
   InitAudioDevice();
 
-  Wave w = LoadWaveFromMemory(".wav", drill_wav, (int)drill_wav_size);
-  drill = LoadSoundFromWave(w);
-  UnloadWave(w);
+  drill = LoadMusicStreamFromMemory(".wav", drill_wav, (int)drill_wav_size);
 
-  SetSoundVolume(drill, 0.2f);
+  SetMusicVolume(drill, 0.5f);
 
 #if DISABLE_NOISE != 1
   noise_stream = LoadAudioStream(44100, 16, 1);
@@ -54,10 +52,16 @@ void play_audio(void) {
 #endif
 }
 
-void play_drill(void) {
-  if (!IsSoundPlaying(drill)) {
-    PlaySound(drill);
-  }
+void start_drilling(void) {
+  PlayMusicStream(drill);
+}
+
+void update_drill(void) {
+  UpdateMusicStream(drill);
+}
+
+void stop_drilling(void) {
+  StopMusicStream(drill);
 }
 
 void cleanup_audio(void) {
@@ -65,7 +69,7 @@ void cleanup_audio(void) {
   UnloadAudioStream(noise_stream);
 #endif
 
-  UnloadSound(drill);
+  UnloadMusicStream(drill);
 
   CloseAudioDevice();
 }
