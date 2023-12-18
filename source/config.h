@@ -36,6 +36,8 @@ typedef struct {
 
   bool do_crt_shader;
   float crt_curvature;
+
+  bool do_scanline_shader;
 } Config;
 
 extern Config config;

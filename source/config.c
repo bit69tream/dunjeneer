@@ -116,6 +116,7 @@ void default_config() {
   };
 
   config.do_crt_shader = true;
+  config.do_scanline_shader = false;
 }
 
 bool is_action_key_up(KeybindAction action) {

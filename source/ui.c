@@ -609,7 +609,7 @@ void render(const Level *map,
 
     BeginMode2D(camera); {
 
-      if (config.do_crt_shader) {
+      if (config.do_scanline_shader) {
         BeginShaderMode(scanline_shader);
       } {
         DrawTextureRec(world_with_cursor.texture,
@@ -621,7 +621,7 @@ void render(const Level *map,
                        },
                        Vector2Zero(),
                        WHITE);
-      } if (config.do_crt_shader) {
+      } if (config.do_scanline_shader) {
         EndShaderMode();
       }
 
