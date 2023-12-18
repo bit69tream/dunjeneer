@@ -12,8 +12,11 @@
 #include <assert.h>
 #include <string.h>
 
+#include <stdio.h>
+
 #include <raylib.h>
 #include <raymath.h>
+#include <rlgl.h>
 
 #define X_TO_SCREEN(x, type) ((type)((x) * GLYPH_WIDTH) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
 #define Y_TO_SCREEN(x, type) ((type)((x) * GLYPH_HEIGHT) + (type)((GLYPH_GAP * (x)) + GLYPH_GAP))
@@ -24,6 +27,7 @@ static Texture2D font;
 
 static RenderTexture2D world;
 static RenderTexture2D world_with_cursor;
+static RenderTexture2D universe;
 
 static Shader cursor_shader;
 static int cursor_shader_mouse_cursor;
@@ -166,6 +170,15 @@ void init_rendering(void) {
 
   camera.rotation = 0;
   camera.zoom = 6;
+
+  int w = 0;
+  int h = 0;
+  for (int i = 0; i < GetMonitorCount(); i++) {
+    w = MAX(w, GetMonitorWidth(i));
+    h = MAX(h, GetMonitorHeight(i));
+  }
+
+  universe = LoadRenderTexture(w, h);
 
   world = LoadRenderTexture(X_TO_SCREEN(LEVEL_WIDTH, int),
                             Y_TO_SCREEN(LEVEL_HEIGHT, int));
@@ -520,8 +533,6 @@ void render_thing_name_under_mouse(const Level *map) {
   #undef ZOOM
 }
 
-#include <stdio.h>
-
 void render(const Level *map,
             Player player) {
   float player_screen_x = X_TO_SCREEN(player.location.x, float) + (GLYPH_WIDTH / 2.0f);
@@ -581,13 +592,11 @@ void render(const Level *map,
     } EndShaderMode();
   } EndTextureMode();
 
-  BeginDrawing(); {
+  BeginTextureMode(universe); {
     ClearBackground(BLACK);
 
-    BeginMode2D(camera); {
-      if (config.do_crt_shader) {
-        BeginShaderMode(crt_shader);
-      } {
+    BeginScissorMode(0, 0, GetScreenWidth(), GetScreenHeight()); {
+      BeginMode2D(camera); {
         DrawTextureRec(world_with_cursor.texture,
                        (Rectangle) {
                          .x = 0,
@@ -595,17 +604,35 @@ void render(const Level *map,
                          .width = (float)world.texture.width,
                          .height = (float)world.texture.height,
                        },
-                       (Vector2) {0, 0},
+                       Vector2Zero(),
                        WHITE);
-      } if (config.do_crt_shader) {
-        EndShaderMode();
+      } EndMode2D();
+
+      if (ui_state.type != UI_STATE_ACTION_MENU) {
+        render_thing_name_under_mouse(map);
       }
-    } EndMode2D();
+    } EndScissorMode();
+  } EndTextureMode();
 
-    DrawFPS(0, 0);
+  float h = (float)universe.texture.height;
 
-    if (ui_state.type != UI_STATE_ACTION_MENU) {
-      render_thing_name_under_mouse(map);
+  BeginDrawing(); {
+    if (config.do_crt_shader) {
+      BeginShaderMode(crt_shader);
+    } {
+
+      DrawTextureRec(universe.texture,
+                     (Rectangle) {
+                       .x = 0,
+                       .y = h - (float) GetScreenHeight(),
+                       .width = (float) GetScreenWidth(),
+                       .height = (float) -GetScreenHeight(),
+                     },
+                     Vector2Zero(),
+                     WHITE);
+
+    } if (config.do_crt_shader) {
+      EndShaderMode();
     }
   } EndDrawing();
 
