@@ -23,16 +23,64 @@ static Camera2D camera;
 static Texture2D font;
 
 static RenderTexture2D world;
+static RenderTexture2D world_with_cursor;
 
 static Shader cursor_shader;
-static int cursor_shader_resolution;
 static int cursor_shader_mouse_cursor;
 
 static Shader noise_shader;
 static int noise_shader_time;
-static int noise_shader_resolution;
 
 static float shader_time;
+
+static Shader crt_shader;
+
+/* TODO: make it work only inside of `area_of_affect` */
+/* TODO: make it render cursor as well */
+
+static const char *crt_shader_vertex_source =
+  "#version 330 \n"
+
+  "in vec3 vertexPosition; \n"
+  "in vec2 vertexTexCoord; \n"
+  "in vec4 vertexColor; \n"
+
+  "out vec2 fragTexCoord; \n"
+  "out vec4 fragColor; \n"
+
+  "uniform mat4 mvp; \n"
+
+  "void main() {\n"
+  "    fragTexCoord = vertexTexCoord; \n"
+  "    fragColor = vertexColor; \n"
+  "    gl_Position = mvp*vec4(vertexPosition, 1.0); \n"
+  "} \n";
+
+static const char *crt_shader_fragment_source =
+  "#version 330\n"
+
+  "in vec2 fragTexCoord;\n"
+
+  "out vec4 finalColor;\n"
+
+  "uniform sampler2D texture0;\n"
+  "uniform vec4 colDiffuse;\n"
+
+  "const float curvature = 4.0;\n"
+
+  "void main() {\n"
+  "    vec2 uv = fragTexCoord * 2.0 - 1.0;\n"
+  "    vec2 offset = uv.yx / curvature;\n"
+  "    uv = uv + uv * offset * offset;\n"
+  "    uv = uv * 0.5f + 0.5f;\n"
+
+  "    vec4 color = texture(texture0, uv);\n"
+  "    if (uv.x <= 0.0 || 1.0 <= uv.x || uv.y <= 0.0 || 1.0 <= uv.y) {\n"
+  "        color = vec4(0);\n"
+  "    }\n"
+
+  "    finalColor = color;\n"
+  "}\n";
 
 static const char *noise_shader_source =
   "#version 330\n\n"
@@ -122,16 +170,20 @@ void init_rendering(void) {
   world = LoadRenderTexture(X_TO_SCREEN(LEVEL_WIDTH, int),
                             Y_TO_SCREEN(LEVEL_HEIGHT, int));
 
+  world_with_cursor = LoadRenderTexture(X_TO_SCREEN(LEVEL_WIDTH, int),
+                             Y_TO_SCREEN(LEVEL_HEIGHT, int));
+
   cursor_shader = LoadShaderFromMemory(NULL, cursor_shader_source);
   assert(IsShaderReady(cursor_shader));
-
-  cursor_shader_resolution = GetShaderLocation(cursor_shader, "resolution");
 
   Vector2 resolution = {
     .x = (float)world.texture.width,
     .y = (float)world.texture.height,
   };
-  SetShaderValue(cursor_shader, cursor_shader_resolution, &resolution, SHADER_UNIFORM_VEC2);
+  SetShaderValue(cursor_shader,
+                 GetShaderLocation(cursor_shader, "resolution"),
+                 &resolution,
+                 SHADER_UNIFORM_VEC2);
 
   cursor_shader_mouse_cursor = GetShaderLocation(cursor_shader, "mouse_cursor");
 
@@ -142,10 +194,15 @@ void init_rendering(void) {
     .x = (float)LEVEL_WIDTH,
     .y = (float)LEVEL_HEIGHT
   };
-  noise_shader_resolution = GetShaderLocation(noise_shader, "resolution");
-  SetShaderValue(noise_shader, noise_shader_resolution, &world_resolution, SHADER_UNIFORM_VEC2);
+  SetShaderValue(noise_shader,
+                 GetShaderLocation(noise_shader, "resolution"),
+                 &world_resolution,
+                 SHADER_UNIFORM_VEC2);
 
   noise_shader_time = GetShaderLocation(noise_shader, "time");
+
+  crt_shader = LoadShaderFromMemory(crt_shader_vertex_source,
+                                    crt_shader_fragment_source);
 
   shader_time = 0;
 
@@ -154,9 +211,11 @@ void init_rendering(void) {
 
 void cleanup_rendering(void) {
   EnableCursor();
+  UnloadShader(crt_shader);
   UnloadShader(cursor_shader);
   UnloadShader(noise_shader);
   UnloadRenderTexture(world);
+  UnloadRenderTexture(world_with_cursor);
   UnloadTexture(font);
 }
 
@@ -261,7 +320,7 @@ void render_map(const Level *map) {
         continue;
       }
 
-      Rectangle position =  {
+      Rectangle position = {
         .x = X_TO_SCREEN(x, float),
         .y = Y_TO_SCREEN(y, float),
         .width = GLYPH_WIDTH,
@@ -461,6 +520,8 @@ void render_thing_name_under_mouse(const Level *map) {
   #undef ZOOM
 }
 
+#include <stdio.h>
+
 void render(const Level *map,
             Player player) {
   float player_screen_x = X_TO_SCREEN(player.location.x, float) + (GLYPH_WIDTH / 2.0f);
@@ -494,34 +555,51 @@ void render(const Level *map,
     render_action_menu();
   } EndTextureMode();
 
+  BeginTextureMode(world_with_cursor); {
+    Point mouse = mouse_in_world();
+
+    Vector4 mouse_cursor = {
+      .x = X_TO_SCREEN(mouse.x, float) - GLYPH_GAP,
+      .y = Y_TO_SCREEN(mouse.y, float) - GLYPH_GAP,
+      .z = GLYPH_WIDTH + (GLYPH_GAP * 2),
+      .w = GLYPH_HEIGHT + (GLYPH_GAP * 2),
+    };
+
+    SetShaderValue(cursor_shader, cursor_shader_mouse_cursor,
+                   &mouse_cursor, SHADER_UNIFORM_VEC4);
+
+    BeginShaderMode(cursor_shader); {
+      DrawTextureRec(world.texture,
+                     (Rectangle) {
+                       .x = 0,
+                       .y = 0,
+                       .width = (float)world.texture.width,
+                       .height = (float)world.texture.height,
+                     },
+                     (Vector2) {0, 0},
+                     WHITE);
+    } EndShaderMode();
+  } EndTextureMode();
+
   BeginDrawing(); {
     ClearBackground(BLACK);
 
     BeginMode2D(camera); {
-      Point mouse = mouse_in_world();
-
-      Vector4 mouse_cursor = {
-        .x = X_TO_SCREEN(mouse.x, float) - GLYPH_GAP,
-        .y = Y_TO_SCREEN(mouse.y, float) - GLYPH_GAP,
-        .z = GLYPH_WIDTH + (GLYPH_GAP * 2),
-        .w = GLYPH_HEIGHT + (GLYPH_GAP * 2),
-      };
-
-      SetShaderValue(cursor_shader, cursor_shader_mouse_cursor,
-                     &mouse_cursor, SHADER_UNIFORM_VEC4);
-
-      BeginShaderMode(cursor_shader); {
-        DrawTextureRec(world.texture,
+      if (config.do_crt_shader) {
+        BeginShaderMode(crt_shader);
+      } {
+        DrawTextureRec(world_with_cursor.texture,
                        (Rectangle) {
                          .x = 0,
                          .y = 0,
                          .width = (float)world.texture.width,
-                         .height = (float)-world.texture.height,
+                         .height = (float)world.texture.height,
                        },
                        (Vector2) {0, 0},
                        WHITE);
-      } EndShaderMode();
-
+      } if (config.do_crt_shader) {
+        EndShaderMode();
+      }
     } EndMode2D();
 
     DrawFPS(0, 0);

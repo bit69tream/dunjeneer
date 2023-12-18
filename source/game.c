@@ -24,7 +24,7 @@
 #define LEVELS_MAX 10
 
 int main(void) {
-  time_t seed = time(0);
+  time_t seed = 1702857962;//time(0);
   srand((unsigned int)seed);
   srand48(seed);
 

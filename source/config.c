@@ -108,6 +108,8 @@ void default_config() {
     .type = KEYBIND_TYPE_KEYBOARD,
     .keyboard_key = KEY_F,
   };
+
+  config.do_crt_shader = true;
 }
 
 bool is_action_key_up(KeybindAction action) {
