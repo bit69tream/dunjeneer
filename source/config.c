@@ -73,9 +73,13 @@ void save_config(void) {
 #define DEFAULT_MOUSE_SENSITIVITY 0.7f
 #define DEFAULT_ACTION_MENU_MOUSE_SENSITIVITY 0.4f
 
+#define DEFAULT_CRT_CURVATURE 4.0f
+
 void default_config() {
   config.mouse_sensitivity = DEFAULT_MOUSE_SENSITIVITY;
   config.action_menu_mouse_sensitivity = DEFAULT_ACTION_MENU_MOUSE_SENSITIVITY;
+
+  config.crt_curvature = DEFAULT_CRT_CURVATURE;
 
   config.keybind[KEYBIND_ACTION_NONE] = (Keybind) {
     .type = KEYBIND_TYPE_NONE,

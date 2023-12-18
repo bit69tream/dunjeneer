@@ -38,6 +38,7 @@ static int noise_shader_time;
 static float shader_time;
 
 static Shader fisheye_shader;
+static int fisheye_shader_curvature;
 
 static Shader scanline_shader;
 
@@ -74,7 +75,7 @@ static const char *fisheye_shader_source =
   "uniform sampler2D texture0;\n"
   "uniform vec4 colDiffuse;\n"
 
-  "const float curvature = 6.0;\n"
+  "uniform float curvature;\n"
 
   "void main() {\n"
   "    vec2 uv = fragTexCoord * 2.0 - 1.0;\n"
@@ -219,6 +220,7 @@ void init_rendering(void) {
   noise_shader_time = GetShaderLocation(noise_shader, "time");
 
   fisheye_shader = LoadShaderFromMemory(NULL, fisheye_shader_source);
+  fisheye_shader_curvature = GetShaderLocation(fisheye_shader, "curvature");
 
   scanline_shader = LoadShaderFromMemory(NULL, scanline_shader_source);
 
@@ -633,6 +635,10 @@ void render(const Level *map,
   } EndTextureMode();
 
   float h = (float)universe.texture.height;
+
+  SetShaderValue(fisheye_shader, fisheye_shader_curvature,
+                 &config.crt_curvature,
+                 SHADER_UNIFORM_FLOAT);
 
   BeginDrawing(); {
     ClearBackground(BLACK);

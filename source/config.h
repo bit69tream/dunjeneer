@@ -30,9 +30,12 @@ typedef struct {
 
 typedef struct {
   Keybind keybind[KEYBIND_ACTION_COUNT];
+
   float mouse_sensitivity;
   float action_menu_mouse_sensitivity;
+
   bool do_crt_shader;
+  float crt_curvature;
 } Config;
 
 extern Config config;
