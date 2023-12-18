@@ -70,7 +70,7 @@ int main(void) {
                                .y = (float)(GetScreenHeight()) / 2.0f,
                              },
                              WHITE,
-                             4);
+                             2);
 
       } EndDrawing();
       continue;
