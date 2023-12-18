@@ -667,12 +667,10 @@ void render(const Level *map,
 static Vector2 mouse_position = {0};
 
 void update_mouse() {
-  mouse_position = Vector2Add(Vector2Multiply(GetMouseDelta(),
-                                              (Vector2) {
-                                                .x = config.mouse_sensitivity,
-                                                .y = config.mouse_sensitivity,
-                                              }),
-                              mouse_position);
+  Vector2 sensitivity = (Vector2) {
+    .x = config.mouse_sensitivity,
+    .y = config.mouse_sensitivity,
+  };
 
   Vector2 top_left_cap = Vector2Zero();
   Vector2 bottom_right_cap = (Vector2) {
@@ -680,20 +678,31 @@ void update_mouse() {
     .y = (float)GetScreenHeight()
   };
 
+#define ENABLE_MOUSE_CLAMPING_WHEN_ACTION_MENU_IS_ACTIVE
+#ifdef ENABLE_MOUSE_CLAMPING_WHEN_ACTION_MENU_IS_ACTIVE
   if (ui_state.type == UI_STATE_ACTION_MENU) {
     Vector2 top_left = (Vector2) {
-      .x = (float)(ui_state.action_tile_location.x - 1) * (GLYPH_WIDTH + 1),
-      .y = (float)(ui_state.action_tile_location.y - 1) * (GLYPH_HEIGHT + 1),
+      .x = X_TO_SCREEN(ui_state.action_tile_location.x - 1, float),
+      .y = Y_TO_SCREEN(ui_state.action_tile_location.y - 1, float),
     };
 
     Vector2 bottom_right = (Vector2) {
-      .x = (float)(ui_state.action_tile_location.x + 1) * (GLYPH_WIDTH + 1),
-      .y = (float)(ui_state.action_tile_location.y + 1) * (GLYPH_HEIGHT + 1),
+      .x = X_TO_SCREEN(ui_state.action_tile_location.x + 1, float),
+      .y = Y_TO_SCREEN(ui_state.action_tile_location.y + 1, float),
     };
 
     top_left_cap = GetWorldToScreen2D(top_left, camera);
     bottom_right_cap = GetWorldToScreen2D(bottom_right, camera);
+
+    sensitivity = (Vector2) {
+      .x = config.action_menu_mouse_sensitivity,
+      .y = config.action_menu_mouse_sensitivity,
+    };
   }
+#endif
+
+  mouse_position = Vector2Add(Vector2Multiply(GetMouseDelta(), sensitivity),
+                              mouse_position);
 
   mouse_position = Vector2Clamp(mouse_position, top_left_cap, bottom_right_cap);
 }

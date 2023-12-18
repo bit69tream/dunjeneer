@@ -70,10 +70,12 @@ void save_config(void) {
   fclose(fp);
 }
 
-#define DEFAULT_MOUSE_SENSITIVITY 1.2f
+#define DEFAULT_MOUSE_SENSITIVITY 0.7f
+#define DEFAULT_ACTION_MENU_MOUSE_SENSITIVITY 0.4f
 
 void default_config() {
   config.mouse_sensitivity = DEFAULT_MOUSE_SENSITIVITY;
+  config.action_menu_mouse_sensitivity = DEFAULT_ACTION_MENU_MOUSE_SENSITIVITY;
 
   config.keybind[KEYBIND_ACTION_NONE] = (Keybind) {
     .type = KEYBIND_TYPE_NONE,
