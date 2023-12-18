@@ -176,14 +176,7 @@ void init_rendering(void) {
   camera.rotation = 0;
   camera.zoom = 6;
 
-  int w = 0;
-  int h = 0;
-  for (int i = 0; i < GetMonitorCount(); i++) {
-    w = MAX(w, GetMonitorWidth(i));
-    h = MAX(h, GetMonitorHeight(i));
-  }
-
-  universe = LoadRenderTexture(w, h);
+  universe = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 
   world = LoadRenderTexture(X_TO_SCREEN(LEVEL_WIDTH, int),
                             Y_TO_SCREEN(LEVEL_HEIGHT, int));
@@ -234,6 +227,12 @@ void init_rendering(void) {
   ui_state.type = UI_STATE_NONE;
 }
 
+void adjust_universe_to_the_window_size(void) {
+  UnloadRenderTexture(universe);
+
+  universe = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+}
+
 void cleanup_rendering(void) {
   EnableCursor();
   UnloadShader(fisheye_shader);
@@ -241,6 +240,7 @@ void cleanup_rendering(void) {
   UnloadShader(noise_shader);
   UnloadRenderTexture(world);
   UnloadRenderTexture(world_with_cursor);
+  UnloadRenderTexture(universe);
   UnloadTexture(font);
 }
 
@@ -607,34 +607,30 @@ void render(const Level *map,
   BeginTextureMode(universe); {
     ClearBackground(BLACK);
 
-    BeginScissorMode(0, 0, GetScreenWidth(), GetScreenHeight()); {
-      BeginMode2D(camera); {
+    BeginMode2D(camera); {
 
-        if (config.do_crt_shader) {
-          BeginShaderMode(scanline_shader);
-        } {
-          DrawTextureRec(world_with_cursor.texture,
-                         (Rectangle) {
-                           .x = 0,
-                           .y = 0,
-                           .width = (float)world.texture.width,
-                           .height = (float)world.texture.height,
-                         },
-                         Vector2Zero(),
-                         WHITE);
-        } if (config.do_crt_shader) {
-          EndShaderMode();
-        }
-
-      } EndMode2D();
-
-      if (ui_state.type != UI_STATE_ACTION_MENU) {
-        render_thing_name_under_mouse(map);
+      if (config.do_crt_shader) {
+        BeginShaderMode(scanline_shader);
+      } {
+        DrawTextureRec(world_with_cursor.texture,
+                       (Rectangle) {
+                         .x = 0,
+                         .y = 0,
+                         .width = (float)world.texture.width,
+                         .height = (float)world.texture.height,
+                       },
+                       Vector2Zero(),
+                       WHITE);
+      } if (config.do_crt_shader) {
+        EndShaderMode();
       }
-    } EndScissorMode();
-  } EndTextureMode();
 
-  float h = (float)universe.texture.height;
+    } EndMode2D();
+
+    if (ui_state.type != UI_STATE_ACTION_MENU) {
+      render_thing_name_under_mouse(map);
+    }
+  } EndTextureMode();
 
   SetShaderValue(fisheye_shader, fisheye_shader_curvature,
                  &config.crt_curvature,
@@ -649,7 +645,7 @@ void render(const Level *map,
       DrawTextureRec(universe.texture,
                      (Rectangle) {
                        .x = 0,
-                       .y = h - (float) GetScreenHeight(),
+                       .y = 0,
                        .width = (float) GetScreenWidth(),
                        .height = (float) -GetScreenHeight(),
                      },

@@ -123,6 +123,10 @@ int main(void) {
       }
     }
 
+    if (IsWindowResized()) {
+      adjust_universe_to_the_window_size();
+    }
+
     render(&levels[current_level], player);
 
     if (player.is_drilling) {
