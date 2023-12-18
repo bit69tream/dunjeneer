@@ -37,9 +37,34 @@ static int noise_shader_time;
 
 static float shader_time;
 
-static Shader crt_shader;
+static Shader fisheye_shader;
 
-static const char *crt_shader_source =
+static Shader scanline_shader;
+
+static const char *scanline_shader_source =
+  "#version 330\n"
+
+  "in vec2 fragTexCoord;\n"
+  "in vec4 fragColor;\n"
+
+  "out vec4 finalColor;\n"
+
+  "uniform sampler2D texture0;\n"
+  "uniform vec4 colDiffuse;\n"
+
+  "uniform vec2 resolution;\n"
+
+  "void main() {\n"
+  "    vec4 color = texture(texture0, fragTexCoord) * colDiffuse * fragColor;\n"
+
+  "    float a = fragTexCoord.y * resolution.y * 2.0;\n"
+  "    color.g *= (sin(a) + 1.0) * 0.15 + 1.0;\n"
+  "    color.rb *= (cos(a) + 1.0) * 0.135 + 1.0;\n"
+
+  "    finalColor = color;\n"
+  "}\n";
+
+static const char *fisheye_shader_source =
   "#version 330\n"
 
   "in vec2 fragTexCoord;\n"
@@ -193,7 +218,14 @@ void init_rendering(void) {
 
   noise_shader_time = GetShaderLocation(noise_shader, "time");
 
-  crt_shader = LoadShaderFromMemory(NULL, crt_shader_source);
+  fisheye_shader = LoadShaderFromMemory(NULL, fisheye_shader_source);
+
+  scanline_shader = LoadShaderFromMemory(NULL, scanline_shader_source);
+
+  SetShaderValue(scanline_shader,
+                 GetShaderLocation(scanline_shader, "resolution"),
+                 &resolution,
+                 SHADER_UNIFORM_VEC2);
 
   shader_time = 0;
 
@@ -202,7 +234,7 @@ void init_rendering(void) {
 
 void cleanup_rendering(void) {
   EnableCursor();
-  UnloadShader(crt_shader);
+  UnloadShader(fisheye_shader);
   UnloadShader(cursor_shader);
   UnloadShader(noise_shader);
   UnloadRenderTexture(world);
@@ -575,15 +607,23 @@ void render(const Level *map,
 
     BeginScissorMode(0, 0, GetScreenWidth(), GetScreenHeight()); {
       BeginMode2D(camera); {
-        DrawTextureRec(world_with_cursor.texture,
-                       (Rectangle) {
-                         .x = 0,
-                         .y = 0,
-                         .width = (float)world.texture.width,
-                         .height = (float)world.texture.height,
-                       },
-                       Vector2Zero(),
-                       WHITE);
+
+        if (config.do_crt_shader) {
+          BeginShaderMode(scanline_shader);
+        } {
+          DrawTextureRec(world_with_cursor.texture,
+                         (Rectangle) {
+                           .x = 0,
+                           .y = 0,
+                           .width = (float)world.texture.width,
+                           .height = (float)world.texture.height,
+                         },
+                         Vector2Zero(),
+                         WHITE);
+        } if (config.do_crt_shader) {
+          EndShaderMode();
+        }
+
       } EndMode2D();
 
       if (ui_state.type != UI_STATE_ACTION_MENU) {
@@ -595,8 +635,10 @@ void render(const Level *map,
   float h = (float)universe.texture.height;
 
   BeginDrawing(); {
+    ClearBackground(BLACK);
+
     if (config.do_crt_shader) {
-      BeginShaderMode(crt_shader);
+      BeginShaderMode(fisheye_shader);
     } {
       DrawTextureRec(universe.texture,
                      (Rectangle) {
@@ -607,10 +649,11 @@ void render(const Level *map,
                      },
                      Vector2Zero(),
                      WHITE);
-
     } if (config.do_crt_shader) {
       EndShaderMode();
     }
+
+    DrawFPS(0, 0);
   } EndDrawing();
 
   shader_time += GetFrameTime();
