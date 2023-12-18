@@ -55,14 +55,9 @@ void play_audio(void) {
 }
 
 void play_drill(void) {
-  static bool played = false;
-  if (played) {
-    played = false;
-    return;
+  if (!IsSoundPlaying(drill)) {
+    PlaySound(drill);
   }
-  played = true;
-
-  PlaySound(drill);
 }
 
 void cleanup_audio(void) {
