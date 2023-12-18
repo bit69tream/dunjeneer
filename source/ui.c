@@ -39,28 +39,7 @@ static float shader_time;
 
 static Shader crt_shader;
 
-/* TODO: make it work only inside of `area_of_affect` */
-/* TODO: make it render cursor as well */
-
-static const char *crt_shader_vertex_source =
-  "#version 330 \n"
-
-  "in vec3 vertexPosition; \n"
-  "in vec2 vertexTexCoord; \n"
-  "in vec4 vertexColor; \n"
-
-  "out vec2 fragTexCoord; \n"
-  "out vec4 fragColor; \n"
-
-  "uniform mat4 mvp; \n"
-
-  "void main() {\n"
-  "    fragTexCoord = vertexTexCoord; \n"
-  "    fragColor = vertexColor; \n"
-  "    gl_Position = mvp*vec4(vertexPosition, 1.0); \n"
-  "} \n";
-
-static const char *crt_shader_fragment_source =
+static const char *crt_shader_source =
   "#version 330\n"
 
   "in vec2 fragTexCoord;\n"
@@ -70,7 +49,7 @@ static const char *crt_shader_fragment_source =
   "uniform sampler2D texture0;\n"
   "uniform vec4 colDiffuse;\n"
 
-  "const float curvature = 4.0;\n"
+  "const float curvature = 6.0;\n"
 
   "void main() {\n"
   "    vec2 uv = fragTexCoord * 2.0 - 1.0;\n"
@@ -214,8 +193,7 @@ void init_rendering(void) {
 
   noise_shader_time = GetShaderLocation(noise_shader, "time");
 
-  crt_shader = LoadShaderFromMemory(crt_shader_vertex_source,
-                                    crt_shader_fragment_source);
+  crt_shader = LoadShaderFromMemory(NULL, crt_shader_source);
 
   shader_time = 0;
 
@@ -620,7 +598,6 @@ void render(const Level *map,
     if (config.do_crt_shader) {
       BeginShaderMode(crt_shader);
     } {
-
       DrawTextureRec(universe.texture,
                      (Rectangle) {
                        .x = 0,
