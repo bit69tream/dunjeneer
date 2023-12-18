@@ -274,7 +274,7 @@ Color tile_to_color(LevelTileType tile) {
   case TILE_ROCK_GRAVEL: return CLITERAL(Color) {102 - 10, 57 - 10, 49 - 10, 255};
   case TILE_ROCK: return CLITERAL(Color) {102, 57, 49, 255};
 
-  case TILE_HARD_ROCK: return CLITERAL(Color) {131, 67, 51, 255};
+  case TILE_HARD_ROCK: return CLITERAL(Color) {102 - 30, 57 - 10, 49 - 10, 255};
 
   case TILE_GREY_ROCK_GRAVEL: return DARKGRAY;
   case TILE_GREY_ROCK: return GRAY;
