@@ -611,7 +611,7 @@ void render_drill(Player player) {
                  BLACK);
 }
 
-#define ZOOM 2
+#define ZOOM 3
 void render_thing_name_under_mouse(const Level *map) {
   Point pos = mouse_in_world();
 
