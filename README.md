@@ -20,6 +20,7 @@ $ build/dunjeneer
 | <kbd>F</kbd> | Move right                         |
 | Left click   | Drill                              |
 | Right click  | Do something with the focused tile |
+| <kbd>X</kbd> | X-ray                              |
 
 
 # font
