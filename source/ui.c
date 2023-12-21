@@ -396,9 +396,10 @@ Message_Buf *push_message(void) {
 
     time_t old_secs = messages[0].spawntime_secs;
     time_t old_nsecs = messages[0].spawntime_nsecs;
+    new_message_index = 0;
 
     for (ssize_t i = 1; i < MESSAGES_MAX; i++) {
-      if (time_lt(old_secs, old_nsecs,
+      if (time_gt(old_secs, old_nsecs,
                   messages[i].spawntime_secs, messages[i].spawntime_nsecs)) {
         old_secs = messages[i].spawntime_secs;
         old_nsecs = messages[i].spawntime_nsecs;
