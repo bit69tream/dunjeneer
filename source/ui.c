@@ -1,5 +1,8 @@
 #include "rand.h"
+#include <bits/time.h>
 #include <stddef.h>
+#include <time.h>
+#include <stdint.h>
 #include <sys/types.h>
 
 #include "ui.h"
@@ -332,6 +335,109 @@ void render_noise(int width, int height) {
   } EndShaderMode();
 }
 
+typedef struct {
+  float lifetime_secs;
+  Message_Buf buffer;
+  time_t spawntime_secs;
+  ssize_t spawntime_nsecs;
+} Message;
+
+#define MESSAGE_STARTING_LIFETIME 3.0f
+
+#define MESSAGES_MAX 10
+
+static Message messages[MESSAGES_MAX];
+
+void init_messages(void) {
+  memset(messages, 0, sizeof(messages));
+}
+
+bool time_gt(time_t a_secs, ssize_t a_nsecs,
+             time_t b_secs, ssize_t b_nsecs) {
+  if (a_secs == b_secs) {
+    return a_nsecs > b_nsecs;
+  }
+
+  return (a_secs > b_secs);
+}
+
+bool time_lt(time_t a_secs, ssize_t a_nsecs,
+             time_t b_secs, ssize_t b_nsecs) {
+  if (a_secs == b_secs) {
+    return a_nsecs < b_nsecs;
+  }
+
+  return (a_secs < b_secs);
+}
+
+int message_comparator(const void *aa, const void *bb) {
+  Message *a = (Message *)aa;
+  Message *b = (Message *)bb;
+
+  return time_gt(a->spawntime_secs, a->spawntime_nsecs,
+                 b->spawntime_secs, b->spawntime_nsecs);
+}
+
+Message_Buf *push_message(void) {
+  ssize_t new_message_index = -1;
+
+  for (ssize_t i = 0; i < MESSAGES_MAX; i++) {
+    if (messages[i].lifetime_secs <= 0.0f) {
+      new_message_index = i;
+      break;
+    }
+  }
+
+  struct timespec now;
+  clock_gettime(CLOCK_MONOTONIC, &now);
+
+  if (new_message_index == -1) {
+    /* we need to find the oldest message and use it */
+
+    time_t old_secs = messages[0].spawntime_secs;
+    time_t old_nsecs = messages[0].spawntime_nsecs;
+
+    for (ssize_t i = 1; i < MESSAGES_MAX; i++) {
+      if (time_lt(old_secs, old_nsecs,
+                  messages[i].spawntime_secs, messages[i].spawntime_nsecs)) {
+        old_secs = messages[i].spawntime_secs;
+        old_nsecs = messages[i].spawntime_nsecs;
+        new_message_index = i;
+      }
+    }
+  }
+
+  if (new_message_index == -1) {
+    assert(false && "not sure how is this possible");
+  }
+
+  messages[new_message_index].spawntime_secs = now.tv_sec;
+  messages[new_message_index].spawntime_nsecs = now.tv_nsec;
+  messages[new_message_index].lifetime_secs = MESSAGE_STARTING_LIFETIME;
+  messages[new_message_index].buffer[0] = 0;
+
+  Message_Buf *o = &messages[new_message_index].buffer;
+
+  return o;
+}
+
+void update_messages() {
+  float dt = GetFrameTime();
+
+  qsort(messages, MESSAGES_MAX, sizeof(Message),
+        message_comparator);
+
+  for (ssize_t i = 0; i < MESSAGES_MAX; i++) {
+    if (strlen(messages[i].buffer) == 0) {
+      messages[i].lifetime_secs = 0;
+    }
+
+    if (messages[i].lifetime_secs > 0.0f) {
+      messages[i].lifetime_secs -= dt;
+    }
+  }
+}
+
 void render_map(const Level *map) {
   for (size_t y = 0; y < LEVEL_HEIGHT; y++) {
     for (size_t x = 0; x < LEVEL_WIDTH; x++) {
@@ -504,6 +610,7 @@ void render_drill(Player player) {
                  BLACK);
 }
 
+#define ZOOM 2
 void render_thing_name_under_mouse(const Level *map) {
   Point pos = mouse_in_world();
 
@@ -517,7 +624,6 @@ void render_thing_name_under_mouse(const Level *map) {
     return;
   }
 
-  #define ZOOM 2
   const char *text = tile_type_name(tile);
   size_t text_len = strlen(text);
   float actual_text_width = (float)text_width(text_len);
@@ -542,8 +648,46 @@ void render_thing_name_under_mouse(const Level *map) {
 
   #undef X
   #undef Y
-  #undef ZOOM
 }
+
+#define MESSAGE_Y_OFFSET (((GLYPH_GAP * 2) + GLYPH_HEIGHT) * ZOOM)
+void render_messages(void) {
+  float y = (float)GetScreenHeight() - MESSAGE_Y_OFFSET - 5;
+  float x = 5;
+
+  for (size_t i = 0; i < MESSAGES_MAX; i++) {
+    if (messages[i].lifetime_secs <= 0.0f) {
+      continue;
+    }
+
+    size_t text_len = strlen(messages[i].buffer);
+
+    if (text_len == 0) {
+      continue;
+    }
+
+    float actual_text_width = (float)text_width(text_len);
+
+    DrawRectangleRec((Rectangle) {
+        .x = x,
+        .y = y,
+        .width = (actual_text_width + (GLYPH_GAP * 2)) * ZOOM,
+        .height = (GLYPH_HEIGHT + (GLYPH_GAP * 2)) * ZOOM,
+      },
+      ColorAlpha(BLACK, messages[i].lifetime_secs));
+
+    render_text(messages[i].buffer, (Vector2) {
+        .x = x + GLYPH_GAP * ZOOM,
+        .y = y + GLYPH_GAP * ZOOM
+      },
+      ColorAlpha(WHITE, messages[i].lifetime_secs),
+      ZOOM);
+
+    y -= MESSAGE_Y_OFFSET;
+  }
+}
+#undef MESSAGE_Y_OFFSET
+#undef ZOOM
 
 void render(const Level *map,
             Player player) {
@@ -630,6 +774,8 @@ void render(const Level *map,
     if (ui_state.type != UI_STATE_ACTION_MENU) {
       render_thing_name_under_mouse(map);
     }
+
+    render_messages();
   } EndTextureMode();
 
   SetShaderValue(fisheye_shader, fisheye_shader_curvature,

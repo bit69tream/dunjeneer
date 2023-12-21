@@ -49,6 +49,8 @@ int main(void) {
   init_rendering();
   init_audio();
 
+  init_messages();
+
   play_audio();
 
   bool is_cursor_enabled = false;
@@ -126,6 +128,14 @@ int main(void) {
     if (IsWindowResized()) {
       adjust_universe_to_the_window_size();
     }
+
+    if (IsKeyDown(KEY_M)) {
+      static int counter = 0;
+      Message_Buf *buf = push_message();
+      sprintf(*buf, "sample text %d", ++counter);
+    }
+
+    update_messages();
 
     render(&levels[current_level], player);
 

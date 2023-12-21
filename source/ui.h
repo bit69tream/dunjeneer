@@ -35,3 +35,13 @@ void render_text_centered(const char *text, Vector2 position, Color color, float
 void render_text(const char *text, Vector2 position, Color color, float zoom);
 
 void adjust_universe_to_the_window_size(void);
+
+void init_messages();
+
+void update_messages();
+
+#define MESSAGE_LEN_MAX 128
+typedef char Message_Buf[MESSAGE_LEN_MAX];
+
+/* NOTE: return a pointer to the memory buffer of size MESSAGE_LEN_MAX */
+Message_Buf *push_message(void);
