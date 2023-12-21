@@ -130,7 +130,16 @@ void action_open(Player *player, Level *map, Point location) {
   switch (tile->type) {
   case TILE_HORIZONTAL_CLOSED_DOOR: tile->type = TILE_HORIZONTAL_OPENED_DOOR; break;
   case TILE_VERTICAL_CLOSED_DOOR: tile->type = TILE_VERTICAL_OPENED_DOOR; break;
-  default: return;
+
+  case TILE_HORIZONTAL_LOCKED_DOOR:
+  case TILE_VERTICAL_LOCKED_DOOR:
+    strcpy(*push_message(), "The door is locked.");
+    break;
+
+  default:
+    snprintf(*push_message(), MESSAGE_LEN_MAX,
+             "You cannot open the %s.", tile_type_name(tile->type));
+  break;
   }
 }
 
@@ -142,7 +151,11 @@ void action_close(Player *player, Level *map, Point location) {
   switch (tile->type) {
   case TILE_HORIZONTAL_OPENED_DOOR: tile->type = TILE_HORIZONTAL_CLOSED_DOOR; break;
   case TILE_VERTICAL_OPENED_DOOR: tile->type = TILE_VERTICAL_CLOSED_DOOR; break;
-  default: return;
+
+  default:
+    snprintf(*push_message(), MESSAGE_LEN_MAX,
+             "You cannot close the %s.", tile_type_name(tile->type));
+  break;
   }
 }
 
@@ -167,7 +180,17 @@ void action_climb(Player *player,
 
     *current_level -= 1;
   } break;
-  default: return;
+  default:
+    snprintf(*push_message(), MESSAGE_LEN_MAX,
+             "You climb close the %s.", tile_type_name(tile->type));
+    return;
+  }
+
+  Message_Buf *msg_buf = push_message();
+  if (*current_level == 0) {
+    snprintf(*msg_buf, MESSAGE_LEN_MAX, "Surface!");
+  } else {
+    snprintf(*msg_buf, MESSAGE_LEN_MAX, "Dungeon level %lu.", *current_level);
   }
 }
 
@@ -179,7 +202,8 @@ void apply_action(Player *player,
   case ACTION_NONE: assert(false && "cannot apply ACTION_NONE");
   case ACTION_OPEN: action_open(player, map, location); return;
   case ACTION_CLOSE: action_close(player, map, location); return;
-  case ACTION_PICK_UP: assert(false && "TODO");
+  case ACTION_PICK_UP: snprintf(*push_message(), MESSAGE_LEN_MAX,
+                                "Action 'Pick up' is not implemented :>"); return;
   case ACTION_CLIMB: action_climb(player, map, location, current_level, levels_max); return;
   case ACTION_COUNT: assert(false && "( ._.)");
   }
