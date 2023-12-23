@@ -270,28 +270,19 @@ void process_mouse(Player *player, Level *map, size_t *current_level, size_t lev
       return;
     }
 
-    Vector2 a = {
-      .x = (float)mouse_position.x + 0.5f,
-      .y = (float)mouse_position.y + 0.5f,
-    };
+    if (mouse_position.x >= (player->location.x - player->reach) &&
+        mouse_position.x <= (player->location.x + player->reach) &&
+        mouse_position.y >= (player->location.y - player->reach) &&
+        mouse_position.y <= (player->location.y + player->reach)) {
 
-    Vector2 b = {
-      .x = (float)player->location.x +0.5f,
-      .y = (float)player->location.y +0.5f,
-    };
+      ui_state.type = UI_STATE_ACTION_MENU;
+      ui_state.action_tile_location = mouse_position;
 
-    float dist = Vector2Distance(a, b);
-
-    if (dist > 2.0f) {          /* can reach one tile away */
-      snprintf(*push_message(), MESSAGE_LEN_MAX,
-               "Too far away to reach.");
       return;
     }
 
-    ui_state.type = UI_STATE_ACTION_MENU;
-    ui_state.action_tile_location = mouse_position;
-
-    assert(ui_state.type == UI_STATE_ACTION_MENU);
+    snprintf(*push_message(), MESSAGE_LEN_MAX,
+             "Too far away to reach.");
   }
 
   if (is_action_key_released(KEYBIND_ACTION_ACTION_MENU) && ui_state.type == UI_STATE_ACTION_MENU) {
@@ -420,6 +411,8 @@ void init_player(Player *player) {
 
   player->is_drilling = false;
   player->drill_offset = (Vector2I) {0, 0};
+
+  player->reach = 1;
 
   #define PLAYER_INITIAL_MAX_HEALTH 50
 

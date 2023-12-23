@@ -19,6 +19,8 @@ typedef struct {
   Vector2I drill_offset;
 
   bool is_opened;
+
+  size_t reach;
 } Player;
 
 typedef enum {
