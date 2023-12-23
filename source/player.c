@@ -123,7 +123,16 @@ Action get_action_from_menu(void) {
 #define TILE_FROM_LOCATION(map, location) ((map)[(location).y][(location.x)])
 
 void action_open(Player *player, Level *map, Point location) {
-  (void) player;
+  if (player->location.x == location.x &&
+      player->location.y == location.y) {
+    snprintf(*push_message(),
+             MESSAGE_LEN_MAX,
+             player->is_opened
+             ? "You are already open."
+             : "You successfully opened yourself.");
+    player->is_opened = true;
+    return;
+  }
 
   LevelTile *tile = &TILE_FROM_LOCATION(map->map, location);
 
@@ -144,7 +153,16 @@ void action_open(Player *player, Level *map, Point location) {
 }
 
 void action_close(Player *player, Level *map, Point location) {
-  (void) player;
+  if (player->location.x == location.x &&
+      player->location.y == location.y) {
+    snprintf(*push_message(),
+             MESSAGE_LEN_MAX,
+             player->is_opened
+             ? "You close yourself."
+             : "You are already closed.");
+    player->is_opened = false;
+    return;
+  }
 
   LevelTile *tile = &TILE_FROM_LOCATION(map->map, location);
 
@@ -162,7 +180,12 @@ void action_close(Player *player, Level *map, Point location) {
 void action_climb(Player *player,
                   Level *map, Point location,
                   size_t *current_level, size_t levels_max) {
-  (void) player;
+  if (player->location.x == location.x &&
+      player->location.y == location.y) {
+    snprintf(*push_message(), MESSAGE_LEN_MAX,
+             "You try to climb onto yourself. Unsuccessfully.");
+    return;
+  }
 
   LevelTile *tile = &TILE_FROM_LOCATION(map->map, location);
 
@@ -182,7 +205,7 @@ void action_climb(Player *player,
   } break;
   default:
     snprintf(*push_message(), MESSAGE_LEN_MAX,
-             "You climb close the %s.", tile_type_name(tile->type));
+             "You cannot climb the %s.", tile_type_name(tile->type));
     return;
   }
 
@@ -244,6 +267,24 @@ void process_mouse(Player *player, Level *map, size_t *current_level, size_t lev
     assert(ui_state.type == UI_STATE_NONE);
 
     if (!map->map[mouse_position.y][mouse_position.x].is_visible) {
+      return;
+    }
+
+    Vector2 a = {
+      .x = (float)mouse_position.x + 0.5f,
+      .y = (float)mouse_position.y + 0.5f,
+    };
+
+    Vector2 b = {
+      .x = (float)player->location.x +0.5f,
+      .y = (float)player->location.y +0.5f,
+    };
+
+    float dist = Vector2Distance(a, b);
+
+    if (dist > 2.0f) {          /* can reach one tile away */
+      snprintf(*push_message(), MESSAGE_LEN_MAX,
+               "Too far away to reach.");
       return;
     }
 
@@ -373,6 +414,12 @@ void init_player(Player *player) {
   player->location = (Point){0};
   player->location_offset = (Vector2I){0};
   player->direction = DIRECTION_NONE;
+
+  /* TODO: need some nice interaction with it */
+  player->is_opened = false;
+
+  player->is_drilling = false;
+  player->drill_offset = (Vector2I) {0, 0};
 
   #define PLAYER_INITIAL_MAX_HEALTH 50
 

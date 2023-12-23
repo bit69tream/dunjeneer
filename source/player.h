@@ -17,6 +17,8 @@ typedef struct {
 
   bool is_drilling;
   Vector2I drill_offset;
+
+  bool is_opened;
 } Player;
 
 typedef enum {
