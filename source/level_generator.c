@@ -568,7 +568,7 @@ void generate_surface(Level *output_map,
   }
 
   for (size_t xi = 0; xi < LEVEL_WIDTH; xi++) {
-    size_t y = (size_t)((5 * (cos((float)xi / 4) / 3 + 1)) - 3);
+    size_t y = (size_t)((5 * (cos((float)xi / 4) / 4 + 1)) - 4);
     output_map->map[y][xi].type = TILE_HARD_ROCK;
     output_map->map[LEVEL_HEIGHT - 1 - y][xi].type = TILE_HARD_ROCK;
 
